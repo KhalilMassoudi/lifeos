@@ -1,0 +1,323 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ── */
+:root {
+  --navy-950: #050912;
+  --navy-900: #0a0f1e;
+  --navy-800: #0f1629;
+  --navy-700: #141d35;
+  --gold-400: #d4af37;
+  --gold-300: #eecf52;
+  --sage-400: #4a7c59;
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+}
+
+/* ── Base Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--navy-900);
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--navy-800);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
+
+/* ── Selection ── */
+::selection {
+  background-color: rgba(212, 175, 55, 0.3);
+  color: #fdf9e7;
+}
+
+/* ── Islamic Geometric Background ── */
+.geometric-bg {
+  background-color: var(--navy-900);
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(212,175,55,0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(74,124,89,0.06) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.035'%3E%3Cpath d='M40 0L50 10L40 20L30 10zm0 60L50 70L40 80L30 70zM0 40L10 30L20 40L10 50zm60 0L70 30L80 40L70 50zM10 10L20 0L30 10L20 20zm40 0L60 0L70 10L60 20zm0 40L60 40L70 50L60 60zM10 50L20 40L30 50L20 60z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ── Glass Card ── */
+.glass-card {
+  background: rgba(15, 22, 41, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 16px;
+}
+
+.glass-card-sm {
+  background: rgba(20, 29, 53, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.08);
+  border-radius: 12px;
+}
+
+/* ── Gold Glow ── */
+.gold-glow {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), 0 0 60px rgba(212, 175, 55, 0.05);
+}
+
+.gold-text {
+  background: linear-gradient(135deg, #d4af37, #f0d96b, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-width);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed);
+}
+
+.sidebar-label {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Prayer Status Buttons ── */
+.prayer-btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.prayer-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.prayer-btn:active::after {
+  opacity: 1;
+}
+
+/* ── Checkmark Animation ── */
+@keyframes checkmark {
+  0% { stroke-dashoffset: 50; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.checkmark-path {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: checkmark 0.4s ease forwards;
+}
+
+/* ── Heatmap ── */
+.heatmap-cell {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.4);
+  z-index: 10;
+  position: relative;
+}
+
+/* ── Star Rating ── */
+.star-btn {
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+/* ── Input Styles ── */
+.lifeos-input {
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  color: #e2e8f0;
+  padding: 10px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.lifeos-input:focus {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+}
+
+.lifeos-input::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+select.lifeos-input option {
+  background: #0f1629;
+  color: #e2e8f0;
+}
+
+/* ── Modal Backdrop ── */
+.modal-backdrop {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Progress Bar ── */
+.progress-bar-fill {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(90deg, var(--sage-400), var(--gold-400));
+}
+
+/* ── Tabs ── */
+.tab-indicator {
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s;
+}
+
+/* ── Lock Screen ── */
+.lock-screen-orb {
+  animation: orbPulse 4s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+
+/* ── Tooltip ── */
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(5, 9, 18, 0.95);
+  color: #e2e8f0;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid rgba(212,175,55,0.2);
+  z-index: 100;
+}
+
+/* ── Ayah Grid ── */
+.ayah-block {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.ayah-block:hover {
+  transform: scale(1.15);
+  z-index: 5;
+  position: relative;
+}
+
+/* ── Streak Calendar ── */
+.streak-day {
+  transition: transform 0.15s ease;
+}
+
+.streak-day:hover {
+  transform: scale(1.2);
+}
+
+/* ── Plugin Card ── */
+.plugin-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.plugin-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.1);
+  border-color: rgba(212, 175, 55, 0.25);
+}
+
+/* ── Nav Item ── */
+.nav-item {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold-400), var(--sage-400));
+  border-radius: 0 3px 3px 0;
+}
+
+/* ── Notification Badge ── */
+.notification-dot {
+  animation: notifyPulse 2s ease-in-out infinite;
+}
+
+@keyframes notifyPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(212, 175, 55, 0); }
+}
