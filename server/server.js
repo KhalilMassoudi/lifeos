@@ -13,6 +13,7 @@ import habitsRoutes from './routes/habits.js';
 import routineRoutes from './routes/routine.js';
 import periodRoutes from './routes/period.js';
 import mealsRoutes from './routes/meals.js';
+import notesRoutes from './routes/notes.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use('/api/habits', habitsRoutes);
 app.use('/api/routine', routineRoutes);
 app.use('/api/period', periodRoutes);
 app.use('/api/meals', mealsRoutes);
+app.use('/api/notes', notesRoutes);
 
 // Basic health check endpoint
 app.get('/api/health', async (req, res) => {

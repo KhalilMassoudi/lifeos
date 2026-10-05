@@ -95,6 +95,34 @@ await call(H, 'POST', '/auth/me/password', { currentPassword: 'her12345', newPas
 check('password changed',
   (await call(null, 'POST', '/auth/login', { userId: herId, password: 'newpass1' })).status === 200);
 
+// ── Notes & Journal sharing ─────────────────────────────────────────────────
+const H2 = (await call(null, 'POST', '/auth/login', { userId: herId, password: 'newpass1' })).data.token;
+const privateEntry = await call(A, 'POST', '/notes', { type: 'journal', title: 'Private', content: 'Only mine', mood: '😌', date: D, tags: ['Gratitude', '#work', 'gratitude'] });
+check('journal entry created with clean tags', privateEntry.status === 200 && JSON.stringify(privateEntry.data.tags) === '["gratitude","work"]',
+  JSON.stringify(privateEntry.data?.tags));
+await call(A, 'POST', '/notes', { type: 'journal', content: 'For both of us', date: D, is_shared: true });
+const herJournal = (await call(H2, 'GET', '/notes?type=journal')).data;
+check('partner sees only shared journal entries', herJournal.length === 1 && herJournal[0].content === 'For both of us' && herJournal[0].author.name === 'Khalil');
+check("partner can't edit a shared entry",
+  (await call(H2, 'PUT', `/notes/${herJournal[0].id}`, { content: 'edited' })).status === 404);
+check("partner can't delete a shared entry",
+  (await call(H2, 'DELETE', `/notes/${herJournal[0].id}`)).status === 404);
+
+const sticky = (await call(H2, 'POST', '/notes', { type: 'quick_note', content: 'Buy milk', color_tag: 'mint', is_shared: true })).data;
+check('quick notes stay private even if marked shared',
+  sticky.is_shared === false && (await call(A, 'GET', '/notes?type=quick_note')).data.length === 0);
+const pinned = await call(H2, 'PUT', `/notes/${sticky.id}`, { is_pinned: true, tags: [] });
+check('pin a quick note', pinned.data.is_pinned === true && pinned.data.content === 'Buy milk');
+
+await call(H2, 'POST', '/notes', { type: 'love_note', content: 'I love you 💌' });
+const wall = (await call(A, 'GET', '/notes?type=love_note')).data;
+check('love notes are visible to both', wall.length === 1 && wall[0].author.name === 'Her');
+check('empty note rejected', (await call(A, 'POST', '/notes', { type: 'journal', content: '  ' })).status === 400);
+check('tags listed per profile', JSON.stringify((await call(A, 'GET', '/notes/tags')).data) === '["gratitude","work"]' &&
+  (await call(H2, 'GET', '/notes/tags')).data.length === 0);
+await call(A, 'PUT', `/notes/${privateEntry.data.id}`, { tags: ['work'] });
+check('unused tags are cleaned up', JSON.stringify((await call(A, 'GET', '/notes/tags')).data) === '["work"]');
+
 const passed = results.filter(Boolean).length;
 console.log(`\n${passed}/${results.length} passed`);
 process.exitCode = passed === results.length ? 0 : 1;

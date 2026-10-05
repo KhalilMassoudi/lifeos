@@ -117,23 +117,25 @@ body {
     radial-gradient(ellipse at 70% 90%, rgb(168 230 207 / 0.35) 0%, transparent 50%);
 }
 
-/* ── Cards ── */
-.glass-card {
-  background: rgb(var(--surface-800));
-  border: 1px solid rgb(var(--surface-500) / 0.7);
-  border-radius: 20px;
-  box-shadow: 0 1px 2px rgb(var(--plum) / 0.04), 0 4px 16px -4px rgb(var(--plum) / 0.08);
-}
-
-.glass-card-sm {
-  background: rgb(var(--surface-800));
-  border: 1px solid rgb(var(--surface-500) / 0.7);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgb(var(--plum) / 0.03), 0 2px 10px -4px rgb(var(--plum) / 0.07);
-}
-
-.gold-glow {
-  box-shadow: 0 2px 4px rgb(var(--plum) / 0.04), 0 24px 60px -16px rgb(var(--accent-400) / 0.35);
+@layer components {
+  /* ── Cards ── */
+  .glass-card {
+    background: rgb(var(--surface-800));
+    border: 1px solid rgb(var(--surface-500) / 0.7);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgb(var(--plum) / 0.04), 0 4px 16px -4px rgb(var(--plum) / 0.08);
+  }
+  
+  .glass-card-sm {
+    background: rgb(var(--surface-800));
+    border: 1px solid rgb(var(--surface-500) / 0.7);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgb(var(--plum) / 0.03), 0 2px 10px -4px rgb(var(--plum) / 0.07);
+  }
+  
+  .gold-glow {
+    box-shadow: 0 2px 4px rgb(var(--plum) / 0.04), 0 24px 60px -16px rgb(var(--accent-400) / 0.35);
+  }
 }
 
 /* Accent gradient text for headings */
@@ -218,33 +220,35 @@ body {
   transform: scale(1.2);
 }
 
-/* ── Inputs ── */
-.lifeos-input {
-  background: rgb(var(--surface-700) / 0.6);
-  border: 1.5px solid rgb(var(--surface-500));
-  border-radius: 12px;
-  color: rgb(var(--ink-200));
-  padding: 10px 14px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 14px;
-  width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-  outline: none;
-}
-
-.lifeos-input:focus {
-  background: rgb(var(--surface-800));
-  border-color: rgb(var(--accent-300));
-  box-shadow: 0 0 0 4px rgb(var(--accent-200) / 0.45);
-}
-
-.lifeos-input::placeholder {
-  color: rgb(var(--ink-600));
-}
-
-select.lifeos-input option {
-  background: rgb(var(--surface-800));
-  color: rgb(var(--ink-200));
+@layer components {
+  /* ── Inputs ── */
+  .lifeos-input {
+    background: rgb(var(--surface-700) / 0.6);
+    border: 1.5px solid rgb(var(--surface-500));
+    border-radius: 12px;
+    color: rgb(var(--ink-200));
+    padding: 10px 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    outline: none;
+  }
+  
+  .lifeos-input:focus {
+    background: rgb(var(--surface-800));
+    border-color: rgb(var(--accent-300));
+    box-shadow: 0 0 0 4px rgb(var(--accent-200) / 0.45);
+  }
+  
+  .lifeos-input::placeholder {
+    color: rgb(var(--ink-600));
+  }
+  
+  select.lifeos-input option {
+    background: rgb(var(--surface-800));
+    color: rgb(var(--ink-200));
+  }
 }
 
 /* Native date/time pickers: plum icons instead of black */

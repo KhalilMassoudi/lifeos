@@ -11,6 +11,7 @@ export const OWNED_TABLES = [
   'routine_blocks', 'routine_logs', 'one_off_tasks',
   'period_logs', 'period_cycles', 'period_settings',
   'nutrition_goals', 'food_items', 'meals', 'meal_entries', 'water_logs',
+  'notes', 'tags',
 ];
 
 // Uniqueness that used to be global and is now per profile:
@@ -20,6 +21,7 @@ const PER_USER_UNIQUES = [
   ['salah_logs', 'salah_logs_date_key', ['date']],
   ['quran_memorization', 'quran_memorization_surah_number_ayah_number_key', ['surah_number', 'ayah_number']],
   ['period_logs', 'period_logs_log_date_key', ['log_date']],
+  ['tags', 'tags_name_key', ['name']],
 ];
 
 async function tableExists(name) {
@@ -203,9 +205,16 @@ async function addProfiles() {
   }
 }
 
+// Notes & Journal: entries can be shared with the other profiles
+async function addNotesSharing() {
+  await pool.query('ALTER TABLE notes ADD COLUMN IF NOT EXISTS is_shared BOOLEAN NOT NULL DEFAULT FALSE');
+  await pool.query('CREATE INDEX IF NOT EXISTS notes_type_date_idx ON notes (type, date DESC, created_at DESC)');
+}
+
 export async function migrate() {
   await createBaseSchema();
   await addFeatureTables();
   await addProfiles();
+  await addNotesSharing();
   console.log('Database migrations completed successfully.');
 }

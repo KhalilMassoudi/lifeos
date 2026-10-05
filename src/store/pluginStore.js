@@ -10,7 +10,7 @@ export const ALL_PLUGINS = [
   { id: 'routine', name: 'Daily Routine', description: 'Plan and schedule your daily routine with time blocks.', icon: '🗓', emoji: '🗓', color: 'from-teal-600 to-emerald-500', tint: '#E2F6EE', available: true },
   { id: 'period', name: 'Period & Cycle', description: 'Track your cycle, symptoms, fertility, predictions, and personal phase insights.', icon: '🌸', emoji: '🌸', color: 'from-rose-500 to-pink-400', tint: '#FFE8EE', available: true },
   { id: 'meals', name: 'Meal Tracker', description: 'Log meals, track macros (protein, carbs, fat, calories), hit daily nutrition goals with smart food search.', icon: '🥗', emoji: '🥗', color: 'from-green-500 to-emerald-400', tint: '#E6F7E2', available: true },
-  { id: 'journal', name: 'Notes & Journal', description: 'Private journal, quick notes, and daily reflections.', icon: '📝', emoji: '📝', color: 'from-violet-600 to-indigo-500', tint: '#EFE8FA', available: false },
+  { id: 'journal', name: 'Notes & Journal', description: 'A private journal with moods and tags, sticky notes, and a love-notes wall you share with your partner.', icon: '📝', emoji: '📝', color: 'from-violet-600 to-indigo-500', tint: '#EFE8FA', available: true },
   { id: 'links', name: 'Save Links & Videos', description: 'Bookmark articles, videos, and resources for later.', icon: '🔗', emoji: '🔗', color: 'from-sky-600 to-blue-600', tint: '#E1EFFC', available: false },
   { id: 'workout', name: 'Workout Logger', description: 'Log your workouts, track progress, and set fitness goals.', icon: '💪', emoji: '💪', color: 'from-red-600 to-rose-500', tint: '#FFE9E3', available: false },
 ];
