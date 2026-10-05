@@ -123,6 +123,30 @@ check('tags listed per profile', JSON.stringify((await call(A, 'GET', '/notes/ta
 await call(A, 'PUT', `/notes/${privateEntry.data.id}`, { tags: ['work'] });
 check('unused tags are cleaned up', JSON.stringify((await call(A, 'GET', '/notes/tags')).data) === '["work"]');
 
+// ── Workouts ────────────────────────────────────────────────────────────────
+const workout = await call(A, 'POST', '/workouts/sessions', {
+  title: 'Leg day', type: 'strength', date: D, duration_minutes: 50, feeling: 4,
+  exercises: [{ name: 'Squat', sets: 4, reps: 8, weight: 60 }, { name: '  ' }, { name: 'Lunges', sets: 3, reps: 12 }],
+  save_as_template: 'Legs',
+});
+check('workout saved with exercises (blank rows ignored)',
+  workout.status === 200 && workout.data.exercises.length === 2 && workout.data.exercises[0].name === 'Squat' && Number(workout.data.exercises[0].weight) === 60,
+  JSON.stringify(workout.data?.exercises));
+const templates = (await call(A, 'GET', '/workouts/templates')).data;
+check('saved as template', templates.length === 1 && templates[0].name === 'Legs' && templates[0].exercises.length === 2 && workout.data.template_id === templates[0].id);
+check('workouts are per profile', (await call(H2, 'GET', '/workouts/sessions')).data.length === 0 && (await call(H2, 'GET', '/workouts/templates')).data.length === 0);
+check("can't edit the other profile's workout",
+  (await call(H2, 'PUT', `/workouts/sessions/${workout.data.id}`, { type: 'cardio', date: D })).status === 404);
+const edited = await call(A, 'PUT', `/workouts/sessions/${workout.data.id}`, {
+  title: 'Run', type: 'cardio', date: D, exercises: [{ name: 'Run', duration_minutes: 30, distance_km: 5.2 }],
+});
+check('workout edited (exercises replaced)', edited.data.exercises.length === 1 && Number(edited.data.exercises[0].distance_km) === 5.2 && edited.data.title === 'Run');
+check('invalid workout rejected',
+  (await call(A, 'POST', '/workouts/sessions', { type: 'strength', date: D, exercises: [{ name: 'Bench', reps: -3 }] })).status === 400 &&
+  (await call(A, 'POST', '/workouts/sessions', { type: 'yoga!', date: D })).status === 400);
+await call(A, 'DELETE', `/workouts/templates/${templates[0].id}`);
+check('deleting a template keeps its workouts', (await call(A, 'GET', '/workouts/sessions')).data.length === 1);
+
 const passed = results.filter(Boolean).length;
 console.log(`\n${passed}/${results.length} passed`);
 process.exitCode = passed === results.length ? 0 : 1;

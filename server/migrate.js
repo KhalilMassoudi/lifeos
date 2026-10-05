@@ -12,6 +12,7 @@ export const OWNED_TABLES = [
   'period_logs', 'period_cycles', 'period_settings',
   'nutrition_goals', 'food_items', 'meals', 'meal_entries', 'water_logs',
   'notes', 'tags',
+  'workout_templates', 'workout_sessions', 'workout_exercises',
 ];
 
 // Uniqueness that used to be global and is now per profile:
@@ -211,10 +212,41 @@ async function addNotesSharing() {
   await pool.query('CREATE INDEX IF NOT EXISTS notes_type_date_idx ON notes (type, date DESC, created_at DESC)');
 }
 
+// Workout Logger: richer sessions, cardio fields, and exercises saved on templates
+async function addWorkoutDetails() {
+  await pool.query(`
+    ALTER TABLE workout_sessions
+      ADD COLUMN IF NOT EXISTS title   VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS type    VARCHAR(50),
+      ADD COLUMN IF NOT EXISTS feeling INT CHECK (feeling BETWEEN 1 AND 5);
+  `);
+  await pool.query(`
+    ALTER TABLE workout_exercises
+      ADD COLUMN IF NOT EXISTS duration_minutes INT,
+      ADD COLUMN IF NOT EXISTS distance_km      DECIMAL(7,2),
+      ADD COLUMN IF NOT EXISTS position         INT NOT NULL DEFAULT 0;
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS workout_template_exercises (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      template_id UUID NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      sets INT,
+      reps INT,
+      weight DECIMAL(10,2),
+      duration_minutes INT,
+      distance_km DECIMAL(7,2),
+      position INT NOT NULL DEFAULT 0
+    );
+  `);
+  await pool.query('CREATE INDEX IF NOT EXISTS workout_sessions_user_date_idx ON workout_sessions (user_id, date DESC)');
+}
+
 export async function migrate() {
   await createBaseSchema();
   await addFeatureTables();
   await addProfiles();
   await addNotesSharing();
+  await addWorkoutDetails();
   console.log('Database migrations completed successfully.');
 }
