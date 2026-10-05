@@ -73,10 +73,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/logs', async (req, res) => {
   try {
     const result = await query('SELECT * FROM habit_logs');
-    res.json(result.rows.map(r => ({
-      ...r,
-      date: r.date.toISOString().split('T')[0]
-    })));
+    res.json(result.rows);
   } catch (error) {
     console.error('Get habit logs error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -96,10 +93,7 @@ router.post('/logs/toggle', async (req, res) => {
       RETURNING *
     `, [habit_id, date, completed]);
 
-    res.json({
-      ...result.rows[0],
-      date: result.rows[0].date.toISOString().split('T')[0]
-    });
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Toggle habit log error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -4,6 +4,7 @@ import BookSearch from './BookSearch';
 import StatsBar from './StatsBar';
 import LibraryGrid from './LibraryGrid';
 import Heatmap from './Heatmap';
+import SessionLog from './SessionLog';
 
 export default function BooksTrackerPlugin() {
   const [activeTab, setActiveTab] = useState('library');
@@ -72,7 +73,7 @@ export default function BooksTrackerPlugin() {
         <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar flex flex-col gap-6">
           <StatsBar />
           <Heatmap />
-          {/* We can add a list of recent sessions below the heatmap if needed, but keeping it simple for now */}
+          <SessionLog />
         </div>
       )}
     </div>

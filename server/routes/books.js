@@ -37,35 +37,23 @@ router.post('/', async (req, res) => {
   }
 });
 
+const BOOK_UPDATABLE_FIELDS = [
+  'title', 'author', 'total_pages', 'pages_read', 'status',
+  'rating', 'notes', 'start_date', 'finish_date',
+];
+
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, pages_read, rating, notes, finish_date } = req.body;
-    
-    // We update fields dynamically based on what's provided
-    let updateFields = [];
-    let params = [];
+    const updateFields = [];
+    const params = [];
     let paramIndex = 1;
 
-    if (status !== undefined) {
-      updateFields.push(`status = $${paramIndex++}`);
-      params.push(status);
-    }
-    if (pages_read !== undefined) {
-      updateFields.push(`pages_read = $${paramIndex++}`);
-      params.push(pages_read);
-    }
-    if (rating !== undefined) {
-      updateFields.push(`rating = $${paramIndex++}`);
-      params.push(rating);
-    }
-    if (notes !== undefined) {
-      updateFields.push(`notes = $${paramIndex++}`);
-      params.push(notes);
-    }
-    if (finish_date !== undefined) {
-      updateFields.push(`finish_date = $${paramIndex++}`);
-      params.push(finish_date);
+    for (const field of BOOK_UPDATABLE_FIELDS) {
+      if (req.body[field] !== undefined) {
+        updateFields.push(`${field} = $${paramIndex++}`);
+        params.push(req.body[field]);
+      }
     }
 
     if (updateFields.length === 0) {
@@ -111,10 +99,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/sessions', async (req, res) => {
   try {
     const result = await query('SELECT * FROM book_sessions ORDER BY date DESC, created_at DESC');
-    res.json(result.rows.map(r => ({
-      ...r,
-      date: r.date.toISOString().split('T')[0]
-    })));
+    res.json(result.rows);
   } catch (error) {
     console.error('Get book sessions error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -142,10 +127,7 @@ router.post('/sessions', async (req, res) => {
       `, [pages_read, book_id]);
     }
 
-    res.json({
-      ...result.rows[0],
-      date: result.rows[0].date.toISOString().split('T')[0]
-    });
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Post book session error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -155,8 +137,18 @@ router.post('/sessions', async (req, res) => {
 router.delete('/sessions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    // We could subtract pages_read from the book here, but to keep it simple, we just delete the session.
-    await query('DELETE FROM book_sessions WHERE id = $1', [id]);
+    const deleted = await query('DELETE FROM book_sessions WHERE id = $1 RETURNING book_id, pages_read', [id]);
+
+    // Take the session's pages back off the book's running total
+    const session = deleted.rows[0];
+    if (session?.book_id && session.pages_read) {
+      await query(`
+        UPDATE books
+        SET pages_read = GREATEST(pages_read - $1, 0), updated_at = NOW()
+        WHERE id = $2
+      `, [session.pages_read, session.book_id]);
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Delete book session error:', error);

@@ -247,7 +247,7 @@ export default function MediaSearch({ currentType }) {
               <button
                 key={item.id}
                 onClick={() => handleAdd(item)}
-                className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                className="group w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
               >
                 {item.poster_path ? (
                   <img 

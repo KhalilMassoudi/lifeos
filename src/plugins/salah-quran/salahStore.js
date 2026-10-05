@@ -28,6 +28,9 @@ export const getDayScore = (dayEntry) => {
   }, 0);
 };
 
+const NOTE_SAVE_DELAY_MS = 600;
+const noteSaveTimers = {};
+
 export const useSalahStore = create((set, get) => ({
   log: {},
   isLoaded: false,
@@ -65,11 +68,10 @@ export const useSalahStore = create((set, get) => ({
     }
   },
 
-  setPrayerNote: async (date, prayerId, note) => {
+  setPrayerNote: (date, prayerId, note) => {
     const key = dateKey(date);
-    const { log } = get();
-    
-    // Optimistic UI update
+
+    // Optimistic UI update (instant), save debounced so typing doesn't send a request per keystroke
     set(state => ({
       log: {
         ...state.log,
@@ -80,12 +82,12 @@ export const useSalahStore = create((set, get) => ({
       },
     }));
 
-    try {
-      await api.post('/salah', { date: key, prayerId, note });
-    } catch (error) {
-      // Revert on failure
-      set({ log });
-    }
+    const timerKey = `${key}:${prayerId}`;
+    clearTimeout(noteSaveTimers[timerKey]);
+    noteSaveTimers[timerKey] = setTimeout(() => {
+      delete noteSaveTimers[timerKey];
+      api.post('/salah', { date: key, prayerId, note }).catch(() => {});
+    }, NOTE_SAVE_DELAY_MS);
   },
 
   getDayEntry: (date) => get().log[dateKey(date)] || {},
@@ -116,7 +118,8 @@ export const useSalahStore = create((set, get) => ({
   getCurrentStreak: () => {
     const { log } = get();
     let streak = 0;
-    let d = new Date();
+    // Today still counts as in progress: if it isn't complete yet, start from yesterday
+    let d = getDayScore(log[dateKey(new Date())]) === 5 ? new Date() : subDays(new Date(), 1);
     while (true) {
       const key = dateKey(d);
       const entry = log[key] || {};

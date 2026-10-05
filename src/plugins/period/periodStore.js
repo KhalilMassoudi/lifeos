@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { format } from 'date-fns';
 import { api } from '../../utils/api';
 import { useToastStore } from '../../store/toastStore';
 
@@ -13,7 +14,7 @@ export const usePeriodStore = create((set, get) => ({
   },
   stats: null,
   isLoaded: false,
-  currentMonth: new Date().toISOString().slice(0, 7), // YYYY-MM
+  currentMonth: format(new Date(), 'yyyy-MM'),
 
   setCurrentMonth: (month) => set({ currentMonth: month }),
 

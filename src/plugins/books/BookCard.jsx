@@ -1,11 +1,27 @@
 import React, { useState } from 'react';
 import { Star, BookOpen, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
+import { format } from 'date-fns';
 import { useBookStore, BOOK_STATUS } from './bookStore';
 import ReadingSessionModal from './ReadingSessionModal';
 
 export default function BookCard({ book }) {
-  const { updateItem, deleteBook, updateBook } = useBookStore();
+  const { deleteBook, updateBook } = useBookStore();
   const [showLogModal, setShowLogModal] = useState(false);
+  const [isEditingPages, setIsEditingPages] = useState(false);
+  const [pagesDraft, setPagesDraft] = useState('');
+
+  const today = () => format(new Date(), 'yyyy-MM-dd');
+
+  const startEditingPages = () => {
+    setPagesDraft(book.total_pages > 0 ? String(book.total_pages) : '');
+    setIsEditingPages(true);
+  };
+
+  const saveTotalPages = () => {
+    const pages = parseInt(pagesDraft, 10);
+    if (pages > 0 && pages !== book.total_pages) updateBook(book.id, { total_pages: pages });
+    setIsEditingPages(false);
+  };
 
   const handleStarClick = (rating) => updateBook(book.id, { rating });
 
@@ -37,7 +53,7 @@ export default function BookCard({ book }) {
                 {book.title}
               </h4>
               <button 
-                onClick={() => deleteBook(book.id)}
+                onClick={() => { if (window.confirm(`Delete "${book.title}" and its reading sessions?`)) deleteBook(book.id); }}
                 className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
@@ -78,9 +94,30 @@ export default function BookCard({ book }) {
           {/* Progress Bar */}
           <div>
             <div className="flex items-center justify-between text-xs font-medium mb-1.5">
-              <span className="text-slate-400">
-                {book.pages_read || 0} / {book.total_pages > 0 ? book.total_pages : '?'} pages
-              </span>
+              {isEditingPages ? (
+                <span className="flex items-center gap-1 text-slate-400">
+                  {book.pages_read || 0} /
+                  <input
+                    type="number"
+                    min="1"
+                    autoFocus
+                    value={pagesDraft}
+                    onChange={e => setPagesDraft(e.target.value)}
+                    onBlur={saveTotalPages}
+                    onKeyDown={e => { if (e.key === 'Enter') saveTotalPages(); if (e.key === 'Escape') setIsEditingPages(false); }}
+                    className="w-16 bg-navy-950 border border-white/10 rounded px-1.5 py-0.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  />
+                  pages
+                </span>
+              ) : (
+                <button
+                  onClick={startEditingPages}
+                  className="text-slate-400 hover:text-amber-500 transition-colors"
+                  title="Edit total pages"
+                >
+                  {book.pages_read || 0} / {book.total_pages > 0 ? book.total_pages : '?'} pages
+                </button>
+              )}
               <span className="text-amber-500">{progressPercent}%</span>
             </div>
             <div className="h-1.5 bg-navy-900 rounded-full overflow-hidden">
@@ -95,7 +132,7 @@ export default function BookCard({ book }) {
           <div className="flex gap-2 mt-auto">
             {book.status === BOOK_STATUS.WANT_TO_READ && (
               <button 
-                onClick={() => updateBook(book.id, { status: BOOK_STATUS.READING, start_date: new Date().toISOString().split('T')[0] })}
+                onClick={() => updateBook(book.id, { status: BOOK_STATUS.READING, start_date: today() })}
                 className="flex-1 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-medium rounded-lg transition-colors border border-amber-500/20"
               >
                 Start Reading
@@ -111,7 +148,7 @@ export default function BookCard({ book }) {
                   <Edit2 className="w-3 h-3" /> Log
                 </button>
                 <button 
-                  onClick={() => updateBook(book.id, { status: BOOK_STATUS.FINISHED, finish_date: new Date().toISOString().split('T')[0] })}
+                  onClick={() => updateBook(book.id, { status: BOOK_STATUS.FINISHED, finish_date: today() })}
                   className="px-2 py-1.5 bg-sage-500/10 hover:bg-sage-500/20 text-sage-400 text-xs font-medium rounded-lg transition-colors border border-sage-500/20"
                   title="Mark as Finished"
                 >
@@ -122,7 +159,7 @@ export default function BookCard({ book }) {
 
             {(book.status === BOOK_STATUS.FINISHED || book.status === BOOK_STATUS.ABANDONED) && (
               <button 
-                onClick={() => updateBook(book.id, { status: BOOK_STATUS.READING })}
+                onClick={() => updateBook(book.id, { status: BOOK_STATUS.READING, pages_read: 0, start_date: today(), finish_date: null })}
                 className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium rounded-lg transition-colors"
               >
                 Read Again

@@ -206,15 +206,8 @@ export default function PasswordGate() {
 
         {/* Footer hint */}
         <p className="text-center text-xs text-slate-600 mt-6">
-          {isNewUser
-            ? 'Your data never leaves your device.'
-            : 'All data is stored privately on your device.'}
+          Your data is stored privately in your own LifeOS database.
         </p>
-        {!isNewUser && (
-          <p className="text-center text-xs text-slate-700 mt-1">
-            Forgot password? Type <code className="text-slate-600 bg-navy-800 px-1 rounded">RESET-LIFEOS</code> to reset.
-          </p>
-        )}
       </div>
     </div>
   );

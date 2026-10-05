@@ -32,9 +32,8 @@ export default function BookSearch() {
       try {
         const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5`;
         
-        const response = await fetch(url, {
-          headers: { 'User-Agent': 'LifeOS/1.0 (personal app)' }
-        });
+        // No custom headers: OpenLibrary's CORS preflight rejects them (breaks Firefox)
+        const response = await fetch(url);
         const data = await response.json();
         
         setResults(data.docs || []);

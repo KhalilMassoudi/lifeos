@@ -1,0 +1,12 @@
+# Dependencies (install with `npm ci` on each machine — native binaries are OS-specific)
+node_modules/
+
+# Build output
+dist/
+
+# Secrets — copy the matching .env.example and fill it in
+.env
+server/.env
+
+# Logs
+*.log

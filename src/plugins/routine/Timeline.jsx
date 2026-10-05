@@ -100,7 +100,7 @@ export default function Timeline() {
                   </button>
                   
                   <button 
-                    onClick={() => deleteBlock(block.id)}
+                    onClick={() => { if (window.confirm(`Delete "${block.title}" from your routine?`)) deleteBlock(block.id); }}
                     className="p-1.5 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-navy-950/80 rounded shadow"
                     title="Delete Block"
                   >

@@ -69,7 +69,7 @@ export default function HabitList() {
                 </div>
 
                 <button 
-                  onClick={() => deleteHabit(habit.id)}
+                  onClick={() => { if (window.confirm(`Delete "${habit.name}" and all its check-ins?`)) deleteHabit(habit.id); }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-navy-900 rounded-lg shadow"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

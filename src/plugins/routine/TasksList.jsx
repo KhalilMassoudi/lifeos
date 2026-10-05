@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRoutineStore } from './routineStore';
 import { Check, Trash2, Calendar, Flag } from 'lucide-react';
-import { isSameDay, format, isPast, isToday } from 'date-fns';
+import { format } from 'date-fns';
 
 const PRIORITIES = {
   high: 'text-red-400 border-red-400/30 bg-red-400/10',
@@ -14,6 +14,9 @@ export default function TasksList() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
 
+  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const todayTasks = tasks.filter(t => t.date === todayKey);
+
   const handleAdd = (e) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -21,7 +24,7 @@ export default function TasksList() {
     addTask({
       title: title.trim(),
       priority,
-      date: new Date().toISOString().split('T')[0],
+      date: format(new Date(), 'yyyy-MM-dd'),
       due_time: null
     });
     
@@ -65,12 +68,12 @@ export default function TasksList() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
-        {tasks.filter(t => isSameDay(new Date(t.date), new Date())).length === 0 ? (
+        {todayTasks.length === 0 ? (
           <div className="text-center text-slate-500 text-xs mt-4">
             No tasks scheduled for today.
           </div>
         ) : (
-          tasks.filter(t => isSameDay(new Date(t.date), new Date())).map(task => {
+          todayTasks.map(task => {
             const pClass = PRIORITIES[task.priority] || PRIORITIES.medium;
             
             return (

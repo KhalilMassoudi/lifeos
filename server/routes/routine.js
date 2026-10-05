@@ -55,10 +55,7 @@ router.delete('/blocks/:id', async (req, res) => {
 router.get('/logs', async (req, res) => {
   try {
     const result = await query('SELECT * FROM routine_logs');
-    res.json(result.rows.map(r => ({
-      ...r,
-      date: r.date.toISOString().split('T')[0]
-    })));
+    res.json(result.rows);
   } catch (error) {
     console.error('Get routine logs error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -77,10 +74,7 @@ router.post('/logs/toggle', async (req, res) => {
       RETURNING *
     `, [block_id, date, completed]);
 
-    res.json({
-      ...result.rows[0],
-      date: result.rows[0].date.toISOString().split('T')[0]
-    });
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Toggle routine log error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -94,10 +88,7 @@ router.post('/logs/toggle', async (req, res) => {
 router.get('/tasks', async (req, res) => {
   try {
     const result = await query('SELECT * FROM one_off_tasks ORDER BY completed ASC, due_time ASC NULLS LAST, created_at DESC');
-    res.json(result.rows.map(r => ({
-      ...r,
-      date: r.date.toISOString().split('T')[0]
-    })));
+    res.json(result.rows);
   } catch (error) {
     console.error('Get one-off tasks error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -114,10 +105,7 @@ router.post('/tasks', async (req, res) => {
       RETURNING *
     `, [title, priority, due_time || null, date]);
 
-    res.json({
-      ...result.rows[0],
-      date: result.rows[0].date.toISOString().split('T')[0]
-    });
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Post one-off task error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -136,10 +124,11 @@ router.put('/tasks/:id', async (req, res) => {
       RETURNING *
     `, [completed, id]);
 
-    res.json({
-      ...result.rows[0],
-      date: result.rows[0].date.toISOString().split('T')[0]
-    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Update one-off task error:', error);
     res.status(500).json({ error: 'Internal server error' });

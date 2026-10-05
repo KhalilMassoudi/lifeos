@@ -14,9 +14,7 @@ router.get('/', async (req, res) => {
     
     const formattedLog = {};
     result.rows.forEach(row => {
-      // date object to YYYY-MM-DD string
-      const dateKey = row.date.toISOString().split('T')[0];
-      formattedLog[dateKey] = {
+      formattedLog[row.date] = {
         fajr: { status: row.fajr_status, note: row.fajr_note },
         dhuhr: { status: row.dhuhr_status, note: row.dhuhr_note },
         asr: { status: row.asr_status, note: row.asr_note },

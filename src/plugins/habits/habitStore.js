@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../../utils/api';
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
 
 const dateKey = (date) => format(date, 'yyyy-MM-dd');
 
@@ -119,7 +119,7 @@ export const useHabitStore = create((set, get) => ({
     
     // Quick 30-day completion rate
     const thirtyDaysAgo = subDays(new Date(), 30);
-    const recentLogs = logs.filter(l => new Date(l.date) >= thirtyDaysAgo && l.completed);
+    const recentLogs = logs.filter(l => parseISO(l.date) >= thirtyDaysAgo && l.completed);
     
     habits.forEach(h => {
       const streak = get().getHabitStreak(h.id);

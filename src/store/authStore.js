@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '../utils/api';
+import { api, SESSION_EXPIRED_EVENT } from '../utils/api';
 
 const STORAGE_KEYS = {
   FAILED_ATTEMPTS: 'lifeos_fa',
@@ -118,3 +118,8 @@ export const useAuthStore = create((set, get) => ({
     return Math.ceil(remaining / 1000);
   },
 }));
+
+// Expired/invalid token on any API call → back to the lock screen
+window.addEventListener(SESSION_EXPIRED_EVENT, () => {
+  useAuthStore.setState({ isAuthenticated: false, error: 'Your session expired. Please unlock again.' });
+});

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { api } from '../../utils/api';
 import { SURAHS } from './data/surahs';
 
@@ -219,7 +219,7 @@ export const useQuranStore = create((set, get) => ({
 
     const dayOfWeekMap = { 0:0,1:0,2:0,3:0,4:0,5:0,6:0 };
     sessions.forEach(s => {
-      const d = new Date(s.date).getDay();
+      const d = parseISO(s.date).getDay();
       dayOfWeekMap[d] = (dayOfWeekMap[d] || 0) + (s.duration || 0);
     });
     const bestDow = Object.entries(dayOfWeekMap).sort((a,b)=>b[1]-a[1])[0];

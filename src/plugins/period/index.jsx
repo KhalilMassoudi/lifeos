@@ -10,7 +10,10 @@ import {
   getDay, 
   isSameDay, 
   isToday,
-  isFuture
+  isFuture,
+  parseISO,
+  addDays,
+  differenceInCalendarDays
 } from 'date-fns';
 import { 
   ChevronLeft, 
@@ -111,7 +114,7 @@ export default function PeriodTrackerPlugin() {
   }
 
   // Calendar calculations
-  const monthDate = new Date(`${currentMonth}-02`); // Avoid timezone rollover on 1st of month
+  const monthDate = parseISO(`${currentMonth}-01`);
   const startMonth = startOfMonth(monthDate);
   const endMonth = endOfMonth(monthDate);
   const daysInMonth = eachDayOfInterval({ start: startMonth, end: endMonth });
@@ -141,20 +144,17 @@ export default function PeriodTrackerPlugin() {
     const today = new Date();
     today.setHours(0,0,0,0);
     const lastCycle = cycles[0];
-    const lastStart = new Date(lastCycle.start_date);
+    const lastStart = parseISO(lastCycle.start_date);
     
     const avgLen = stats.averageCycleLength || 28;
     const avgDur = stats.averagePeriodDuration || 5;
     
-    const diffTime = date.getTime() - lastStart.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    
+    const diffDays = differenceInCalendarDays(date, lastStart);
     const cycleIndex = Math.floor(diffDays / avgLen);
-    const cycleStart = new Date(lastStart);
-    cycleStart.setDate(lastStart.getDate() + cycleIndex * avgLen);
-    
+    const cycleStart = addDays(lastStart, cycleIndex * avgLen);
+
     // Calculate day in projected cycle
-    const projCycleDay = Math.floor((date.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const projCycleDay = differenceInCalendarDays(date, cycleStart) + 1;
     
     // 2. Future Predicted Period days
     if (projCycleDay >= 1 && projCycleDay <= avgDur) {
@@ -252,9 +252,9 @@ export default function PeriodTrackerPlugin() {
   // Helper to fetch day logs for cycle breakdown
   const getCycleDaysLogs = (cycle) => {
     const cycleLogs = [];
-    const start = new Date(cycle.start_date);
+    const start = parseISO(cycle.start_date);
     const end = cycle.cycle_length 
-      ? new Date(start.getTime() + cycle.cycle_length * 24 * 60 * 60 * 1000)
+      ? addDays(start, cycle.cycle_length)
       : new Date();
 
     const dates = eachDayOfInterval({ start, end });
@@ -441,21 +441,21 @@ export default function PeriodTrackerPlugin() {
                   {stats?.nextPeriodStart && (
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">Next expected period:</span>
-                      <span className="font-semibold text-sky-400">{format(new Date(stats.nextPeriodStart), 'MMM d, yyyy')}</span>
+                      <span className="font-semibold text-sky-400">{format(parseISO(stats.nextPeriodStart), 'MMM d, yyyy')}</span>
                     </div>
                   )}
                   {settings.show_fertile_window && stats?.fertileWindow?.start && (
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">Estimated fertile window:</span>
                       <span className="font-semibold text-fuchsia-400">
-                        {format(new Date(stats.fertileWindow.start), 'MMM d')} - {format(new Date(stats.fertileWindow.end), 'MMM d')}
+                        {format(parseISO(stats.fertileWindow.start), 'MMM d')} - {format(parseISO(stats.fertileWindow.end), 'MMM d')}
                       </span>
                     </div>
                   )}
                   {stats?.ovulationDate && (
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-slate-500">Predicted ovulation:</span>
-                      <span className="font-semibold text-purple-400">{format(new Date(stats.ovulationDate), 'MMM d')}</span>
+                      <span className="font-semibold text-purple-400">{format(parseISO(stats.ovulationDate), 'MMM d')}</span>
                     </div>
                   )}
                 </div>
@@ -539,12 +539,12 @@ export default function PeriodTrackerPlugin() {
                       >
                         <div className="space-y-1">
                           <span className="text-xs text-slate-500 font-semibold uppercase">
-                            Cycle Started {format(new Date(cycle.start_date), 'MMMM d, yyyy')}
+                            Cycle Started {format(parseISO(cycle.start_date), 'MMMM d, yyyy')}
                           </span>
                           <div className="text-sm font-semibold text-slate-200">
                             {cycle.end_date 
-                              ? `Bleeding: ${format(new Date(cycle.start_date), 'MMM d')} - ${format(new Date(cycle.end_date), 'MMM d')}`
-                              : `Started: ${format(new Date(cycle.start_date), 'MMM d')} (Active)`
+                              ? `Bleeding: ${format(parseISO(cycle.start_date), 'MMM d')} - ${format(parseISO(cycle.end_date), 'MMM d')}`
+                              : `Started: ${format(parseISO(cycle.start_date), 'MMM d')} (Active)`
                             }
                           </div>
                         </div>

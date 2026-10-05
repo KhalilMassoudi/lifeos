@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../../utils/api';
-import { subDays, startOfYear, isSameDay, format } from 'date-fns';
+import { subDays, startOfYear, isSameDay, format, parseISO } from 'date-fns';
 
 export const BOOK_STATUS = {
   WANT_TO_READ: 'want_to_read',
@@ -91,13 +91,33 @@ export const useBookStore = create((set, get) => ({
     }
   },
 
+  deleteSession: async (sessionId) => {
+    const { sessions, books } = get();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    // Optimistic: drop the session and take its pages back off the book
+    set(state => ({
+      sessions: state.sessions.filter(s => s.id !== sessionId),
+      books: state.books.map(b => b.id === session.book_id
+        ? { ...b, pages_read: Math.max((b.pages_read || 0) - (session.pages_read || 0), 0) }
+        : b),
+    }));
+
+    try {
+      await api.delete(`/books/sessions/${sessionId}`);
+    } catch (error) {
+      set({ sessions, books }); // Revert
+    }
+  },
+
   getStats: () => {
     const { books, sessions } = get();
     
     const yearStart = startOfYear(new Date());
     const finishedThisYear = books.filter(b => 
       b.status === BOOK_STATUS.FINISHED && 
-      b.finish_date && new Date(b.finish_date) >= yearStart
+      b.finish_date && parseISO(b.finish_date) >= yearStart
     ).length;
 
     const totalPagesRead = sessions.reduce((acc, s) => acc + (s.pages_read || 0), 0);

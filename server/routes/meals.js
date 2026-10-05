@@ -121,10 +121,7 @@ router.get('/day/:date', async (req, res) => {
         END
     `, [date]);
 
-    res.json(result.rows.map(m => ({
-      ...m,
-      meal_date: m.meal_date.toISOString().split('T')[0],
-    })));
+    res.json(result.rows);
   } catch (error) {
     console.error('Get day meals error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -280,7 +277,6 @@ router.post('/', async (req, res) => {
     );
     res.json({
       ...result.rows[0],
-      meal_date: result.rows[0].meal_date.toISOString().split('T')[0],
       entries: [],
     });
   } catch (error) {

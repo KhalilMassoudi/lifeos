@@ -23,7 +23,11 @@ router.get('/status', async (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { password } = req.body;
-    
+
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
     // Ensure only one user can exist
     const userCheck = await query('SELECT COUNT(*) FROM users');
     if (parseInt(userCheck.rows[0].count, 10) > 0) {
@@ -52,7 +56,11 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { password } = req.body;
-    
+
+    if (typeof password !== 'string' || !password) {
+      return res.status(400).json({ error: 'Password is required.' });
+    }
+
     const result = await query('SELECT id, password_hash FROM users LIMIT 1');
     if (result.rows.length === 0) {
       return res.status(400).json({ error: 'No user exists. Please register.' });

@@ -122,6 +122,7 @@ export const useMealStore = create((set, get) => ({
           m.id === mealId ? { ...m, entries: [...(m.entries || []), entry] } : m
         ),
       }));
+      get().refreshWeekStats();
       return entry;
     } catch (error) {
       console.error('Add entry error:', error);
@@ -140,6 +141,7 @@ export const useMealStore = create((set, get) => ({
     }));
     try {
       await api.delete(`/meals/entries/${entryId}`);
+      get().refreshWeekStats();
     } catch (error) {
       set({ meals });
     }

@@ -52,6 +52,16 @@ function formatLocalDate(dateVal) {
   return formatLocalDate(new Date(dateVal));
 }
 
+// Whole calendar days from one YYYY-MM-DD string to another. Uses UTC so the
+// result never depends on the server timezone or daylight-saving changes.
+function daysBetween(fromStr, toStr) {
+  const toUtc = (s) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((toUtc(toStr) - toUtc(fromStr)) / (1000 * 60 * 60 * 24));
+}
+
 // Helper: Recalculate period_cycles based on period_logs
 async function recalculateCycles() {
   const logsRes = await query(`
@@ -62,10 +72,8 @@ async function recalculateCycles() {
   `);
   
   const logs = logsRes.rows.map(r => {
-    const { dateStr, date } = parseLocalDate(r.log_date);
     return {
-      dateStr,
-      date,
+      dateStr: formatLocalDate(r.log_date),
       isPeriodDay: r.is_period_day,
       isStart: r.is_period_start,
       isEnd: r.is_period_end
@@ -88,10 +96,7 @@ async function recalculateCycles() {
       if (!currentCycle) {
         startsNew = true;
       } else {
-        const lastCycleDate = new Date(currentCycle.lastPeriodDate);
-        const diffTime = Math.abs(log.date - lastCycleDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 3) {
+        if (daysBetween(currentCycle.lastPeriodDate, log.dateStr) > 3) {
           startsNew = true;
         }
       }
@@ -99,9 +104,7 @@ async function recalculateCycles() {
 
     if (startsNew) {
       if (currentCycle) {
-        const diffTime = Math.abs(log.date - new Date(currentCycle.start_date));
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        currentCycle.cycle_length = diffDays;
+        currentCycle.cycle_length = daysBetween(currentCycle.start_date, log.dateStr);
         cycles.push(currentCycle);
       }
       currentCycle = {
@@ -114,16 +117,12 @@ async function recalculateCycles() {
       currentCycle.end_date = log.dateStr;
       currentCycle.lastPeriodDate = log.dateStr;
       
-      const diffTime = Math.abs(new Date(currentCycle.end_date) - new Date(currentCycle.start_date));
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      currentCycle.period_duration = diffDays;
+      currentCycle.period_duration = daysBetween(currentCycle.start_date, currentCycle.end_date) + 1;
     }
 
     if (log.isEnd && currentCycle) {
       currentCycle.end_date = log.dateStr;
-      const diffTime = Math.abs(new Date(currentCycle.end_date) - new Date(currentCycle.start_date));
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      currentCycle.period_duration = diffDays;
+      currentCycle.period_duration = daysBetween(currentCycle.start_date, currentCycle.end_date) + 1;
     }
   }
 
@@ -320,8 +319,7 @@ router.get('/stats', async (req, res) => {
       const today = new Date();
       today.setHours(0,0,0,0);
       
-      const diffTime = today - lastStart;
-      currentCycleDay = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      currentCycleDay = daysBetween(formatLocalDate(lastStart), formatLocalDate(today)) + 1;
 
       // Predicted start date
       const nextStart = new Date(lastStart);
@@ -367,19 +365,15 @@ router.get('/stats', async (req, res) => {
 
     logs.forEach(log => {
       if (log.moods && log.moods.length > 0) {
-        const { date: logDate } = parseLocalDate(log.log_date);
+        const logDateStr = formatLocalDate(log.log_date);
         // Find which cycle this log belongs to
         const cycle = cycles.find(c => {
-          const { date: start } = parseLocalDate(c.start_date);
-          const end = c.cycle_length 
-            ? new Date(start.getTime() + c.cycle_length * 24 * 60 * 60 * 1000)
-            : new Date(start.getTime() + avgCycleLength * 24 * 60 * 60 * 1000);
-          return logDate >= start && logDate < end;
+          const offset = daysBetween(formatLocalDate(c.start_date), logDateStr);
+          return offset >= 0 && offset < (c.cycle_length || avgCycleLength);
         });
 
         if (cycle) {
-          const { date: start } = parseLocalDate(cycle.start_date);
-          const diffDays = Math.floor((logDate - start) / (1000 * 60 * 60 * 24)) + 1;
+          const diffDays = daysBetween(formatLocalDate(cycle.start_date), logDateStr) + 1;
           
           let phase = 'Luteal';
           if (diffDays >= 1 && diffDays <= avgPeriodDuration) {

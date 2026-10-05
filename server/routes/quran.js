@@ -11,12 +11,7 @@ router.use(requireAuth);
 router.get('/sessions', async (req, res) => {
   try {
     const result = await query('SELECT * FROM quran_sessions ORDER BY date DESC, created_at DESC');
-    // Format dates and id
-    const sessions = result.rows.map(row => ({
-      ...row,
-      date: row.date.toISOString().split('T')[0],
-    }));
-    res.json(sessions);
+    res.json(result.rows);
   } catch (error) {
     console.error('Get quran sessions error:', error);
     res.status(500).json({ error: 'Internal server error' });

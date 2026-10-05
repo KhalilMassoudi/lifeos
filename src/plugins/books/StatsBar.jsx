@@ -7,7 +7,7 @@ export default function StatsBar() {
   const stats = getStats();
 
   return (
-    <div className="flex flex-wrap gap-4 px-6 mb-4">
+    <div className="flex flex-wrap gap-4">
       <div className="flex-1 bg-navy-800/50 border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:border-amber-500/20 transition-colors">
         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
           <BookMarked className="w-5 h-5" />

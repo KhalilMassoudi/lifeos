@@ -3,7 +3,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { Pool } = pg;
+const { Pool, types } = pg;
+
+// Return DATE columns as plain 'YYYY-MM-DD' strings. By default pg turns them
+// into JS Dates at local midnight, and toISOString() then shifts them to the
+// previous day in any timezone east of UTC.
+const DATE_OID = 1082;
+types.setTypeParser(DATE_OID, (value) => value);
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',

@@ -4,6 +4,17 @@ const BASE_URL = 'http://localhost:3000/api';
 
 const getToken = () => sessionStorage.getItem('lifeos_session_token');
 
+// Fired when the server rejects our session token; the auth store listens for it
+// and drops back to the lock screen.
+export const SESSION_EXPIRED_EVENT = 'lifeos:session-expired';
+
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function fetchApi(endpoint, options = {}) {
   const token = getToken();
   
@@ -22,17 +33,16 @@ async function fetchApi(endpoint, options = {}) {
       headers,
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      if (response.status === 401) {
-        // Token expired or invalid
+      // A 401 from /auth/* just means a wrong password; anywhere else the session is gone
+      if (response.status === 401 && token && !endpoint.startsWith('/auth/')) {
         sessionStorage.removeItem('lifeos_session_token');
-        if (window.location.pathname !== '/') {
-          window.location.reload();
-        }
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+        throw new ApiError('Session expired — please unlock LifeOS again.', 401);
       }
-      throw new Error(data.error || 'API Error');
+      throw new ApiError(data.error || 'API Error', response.status);
     }
 
     return data;

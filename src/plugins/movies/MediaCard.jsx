@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Star, Image as ImageIcon, Plus, Minus, Trash2, X, Film, User, Users, Clock, Award, BookOpen } from 'lucide-react';
 import { useMediaStore, MEDIA_TYPE, MEDIA_STATUS } from './mediaStore';
 
@@ -140,13 +141,13 @@ export default function MediaCard({ item }) {
       </div>
 
       {/* Detail Modal */}
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm animate-fade-in"
-          onClick={() => setIsModalOpen(false)}
+          onClick={(e) => { e.stopPropagation(); setIsModalOpen(false); }}
         >
           <div 
-            className="w-full max-w-2xl bg-navy-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-slide-up"
+            className="w-full max-w-2xl bg-navy-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -347,7 +348,8 @@ export default function MediaCard({ item }) {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
