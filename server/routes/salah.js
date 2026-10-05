@@ -10,7 +10,7 @@ router.use(requireAuth);
 // Returns formatted object: { 'YYYY-MM-DD': { fajr: { status, note }, ... } }
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM salah_logs');
+    const result = await query('SELECT * FROM salah_logs WHERE user_id = $1', [req.userId]);
     
     const formattedLog = {};
     result.rows.forEach(row => {
@@ -44,41 +44,17 @@ router.post('/', async (req, res) => {
     const statusCol = `${prayerId}_status`;
     const noteCol = `${prayerId}_note`;
 
-    // Fetch existing row to merge updates if needed, but we can do an UPSERT
-    // The tricky part: we only want to update one prayer's status/note and leave others alone.
-    // Using COALESCE during INSERT isn't straightforward because we don't have existing values.
-    // Let's do a SELECT first.
-    
-    const existResult = await query('SELECT * FROM salah_logs WHERE date = $1', [date]);
-    
-    if (existResult.rows.length === 0) {
-      // Insert new
-      await query(`
-        INSERT INTO salah_logs (date, ${statusCol}, ${noteCol})
-        VALUES ($1, $2, $3)
-      `, [date, status, note]);
-    } else {
-      // Update existing
-      // Only update fields that were provided in the request
-      let updateQuery = `UPDATE salah_logs SET updated_at = NOW()`;
-      const params = [date];
-      let paramIndex = 2;
-
-      if (status !== undefined) {
-        updateQuery += `, ${statusCol} = $${paramIndex}`;
-        params.push(status);
-        paramIndex++;
-      }
-      if (note !== undefined) {
-        updateQuery += `, ${noteCol} = $${paramIndex}`;
-        params.push(note);
-        paramIndex++;
-      }
-
-      updateQuery += ` WHERE date = $1`;
-      
-      await query(updateQuery, params);
-    }
+    // Upsert this profile's row for the day, touching only the fields that were sent
+    const setStatus = status !== undefined;
+    const setNote = note !== undefined;
+    await query(`
+      INSERT INTO salah_logs (user_id, date, ${statusCol}, ${noteCol})
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id, date) DO UPDATE SET
+        ${statusCol} = CASE WHEN $5 THEN EXCLUDED.${statusCol} ELSE salah_logs.${statusCol} END,
+        ${noteCol}   = CASE WHEN $6 THEN EXCLUDED.${noteCol}   ELSE salah_logs.${noteCol}   END,
+        updated_at = NOW()
+    `, [req.userId, date, setStatus ? status : null, setNote ? note : null, setStatus, setNote]);
 
     res.json({ success: true });
   } catch (error) {

@@ -9,7 +9,7 @@ router.use(requireAuth);
 // Get all active plugins
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT plugin_id FROM active_plugins WHERE is_active = true');
+    const result = await query('SELECT plugin_id FROM active_plugins WHERE user_id = $1 AND is_active = true ORDER BY created_at', [req.userId]);
     const activePlugins = result.rows.map(row => row.plugin_id);
     res.json(activePlugins);
   } catch (error) {
@@ -24,11 +24,11 @@ router.post('/toggle', async (req, res) => {
     const { pluginId, isActive } = req.body;
 
     await query(`
-      INSERT INTO active_plugins (plugin_id, is_active)
-      VALUES ($1, $2)
-      ON CONFLICT (plugin_id)
+      INSERT INTO active_plugins (user_id, plugin_id, is_active)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id, plugin_id)
       DO UPDATE SET is_active = EXCLUDED.is_active, updated_at = NOW()
-    `, [pluginId, isActive]);
+    `, [req.userId, pluginId, isActive]);
 
     res.json({ success: true });
   } catch (error) {

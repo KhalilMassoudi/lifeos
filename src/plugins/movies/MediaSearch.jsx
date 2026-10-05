@@ -231,7 +231,7 @@ export default function MediaSearch({ currentType }) {
 
       {/* OMDB Fetch Overlay */}
       {isFetchingOMDB && (
-        <div className="fixed inset-0 bg-navy-950/40 backdrop-blur-[2px] flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center z-50">
           <div className="bg-navy-900 border border-white/10 p-5 rounded-2xl flex items-center gap-3 shadow-2xl animate-fade-in max-w-sm">
             <div className="w-5 h-5 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
             <span className="text-sm font-medium text-slate-300">Fetching title details from OMDB...</span>

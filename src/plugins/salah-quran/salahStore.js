@@ -3,11 +3,11 @@ import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, parseISO 
 import { api } from '../../utils/api';
 
 export const PRAYERS = [
-  { id: 'fajr',    name: 'Fajr',    arabic: 'الفجر',    time: 'Before Sunrise' },
-  { id: 'dhuhr',   name: 'Dhuhr',   arabic: 'الظهر',    time: 'Midday'         },
-  { id: 'asr',     name: 'Asr',     arabic: 'العصر',    time: 'Afternoon'      },
-  { id: 'maghrib', name: 'Maghrib', arabic: 'المغرب',   time: 'After Sunset'   },
-  { id: 'isha',    name: 'Isha',    arabic: 'العشاء',   time: 'Night'          },
+  { id: 'fajr',    name: 'Fajr',    arabic: 'الفجر',    time: 'Before Sunrise', icon: '🌄', tint: '#FDE7EE' },
+  { id: 'dhuhr',   name: 'Dhuhr',   arabic: 'الظهر',    time: 'Midday',         icon: '☀️', tint: '#FFF3D6' },
+  { id: 'asr',     name: 'Asr',     arabic: 'العصر',    time: 'Afternoon',      icon: '🌤️', tint: '#E3F1FC' },
+  { id: 'maghrib', name: 'Maghrib', arabic: 'المغرب',   time: 'After Sunset',   icon: '🌇', tint: '#FFE6D9' },
+  { id: 'isha',    name: 'Isha',    arabic: 'العشاء',   time: 'Night',          icon: '🌙', tint: '#ECE6F8' },
 ];
 
 export const PRAYER_STATUS = {

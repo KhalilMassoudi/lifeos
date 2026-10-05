@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import PluginStore from './PluginStore';
 import { usePluginStore } from '../../store/pluginStore';
+import { useAuthStore } from '../../store/authStore';
 
 // Lazy load plugins
 
@@ -17,25 +18,47 @@ const PLUGIN_COMPONENTS = {
 
 const LoadingSpinner = () => (
   <div className="flex-1 flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
-      <p className="text-slate-500 text-sm font-body">Loading plugin…</p>
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 rounded-full border-[3px] border-accent-100 border-t-accent-400 animate-spin" />
+      <p className="text-ink-muted text-sm font-semibold">Loading…</p>
     </div>
   </div>
 );
 
-const EmptyState = () => (
-  <div className="flex-1 flex items-center justify-center">
-    <div className="text-center animate-fade-in max-w-sm mx-auto px-6">
-      <div className="text-6xl mb-6 animate-float inline-block">✦</div>
-      <h2 className="font-display text-2xl gold-text font-semibold mb-3">Welcome to LifeOS</h2>
-      <p className="text-slate-500 text-sm leading-relaxed mb-6">
-        Your personal life operating system. Activate a plugin from the store to get started.
-      </p>
-      <p className="font-arabic text-gold-400/40 text-xl">بِسْمِ اللَّهِ</p>
+const greeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Good night';
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+};
+
+function EmptyState() {
+  const { currentUser } = useAuthStore();
+  const { openStore } = usePluginStore();
+  return (
+    <div className="flex-1 flex items-center justify-center px-6">
+      <div className="text-center animate-fade-in max-w-md">
+        <div className="mx-auto mb-6 w-24 h-24 rounded-[32px] bg-gradient-to-br from-accent-100 via-lavender-light to-mint-light flex items-center justify-center text-5xl animate-float shadow-soft">
+          {currentUser?.avatar || '✨'}
+        </div>
+        <h2 className="font-display text-4xl text-ink font-semibold mb-2">
+          {greeting()}, <span className="gold-text italic">{currentUser?.name}</span>
+        </h2>
+        <p className="text-ink-muted leading-relaxed mb-7">
+          This is your little corner of LifeOS. Add the spaces you want — prayers, habits, books, meals and more.
+        </p>
+        <button
+          onClick={openStore}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-paper bg-gradient-to-r from-accent-400 to-accent-500 shadow-glow hover:-translate-y-0.5 transition-transform"
+        >
+          ✨ Browse plugins
+        </button>
+        <p className="font-arabic text-accent-400/60 text-xl mt-8">بِسْمِ اللَّهِ</p>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
@@ -47,7 +70,7 @@ export default function AppShell() {
 
   if (!isLoaded) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-navy-900">
+      <div className="flex h-screen w-screen items-center justify-center bg-surface-page">
         <LoadingSpinner />
       </div>
     );
@@ -56,7 +79,7 @@ export default function AppShell() {
   const ActivePlugin = currentPluginId ? PLUGIN_COMPONENTS[currentPluginId] : null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-navy-900">
+    <div className="flex h-screen w-screen overflow-hidden bg-surface-page">
       {/* Sidebar */}
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(v => !v)} />
 
@@ -65,9 +88,6 @@ export default function AppShell() {
 
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Subtle top gradient */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-400/20 to-transparent" />
-
         <Suspense fallback={<LoadingSpinner />}>
           {ActivePlugin ? <ActivePlugin /> : <EmptyState />}
         </Suspense>

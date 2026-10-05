@@ -37,7 +37,7 @@ export default function SalahQuranPlugin() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-3 rounded-t-xl text-sm font-medium border-b-2 transition-all -mb-px
                 ${activeTab === tab.id
-                  ? 'text-gold-400 border-gold-400 bg-gradient-to-b from-gold-400/8 to-transparent'
+                  ? 'text-gold-400 border-gold-400 bg-gradient-to-b from-gold-400/10 to-transparent'
                   : 'text-slate-500 border-transparent hover:text-slate-300 hover:border-white/10'
                 }`}
             >

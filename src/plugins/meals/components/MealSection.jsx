@@ -101,7 +101,7 @@ export default function MealSection({ mealType }) {
 
 function EntryRow({ entry, mealId, onDelete }) {
   return (
-    <div className="flex items-center gap-2 bg-black/20 hover:bg-black/30 rounded-xl px-3 py-2 group transition-colors">
+    <div className="flex items-center gap-2 bg-surface/80 hover:bg-surface shadow-soft rounded-xl px-3 py-2 group transition-colors">
       <div className="flex-1 min-w-0">
         <p className="text-xs text-white truncate">{entry.food_name}</p>
         <p className="text-[10px] text-slate-400">

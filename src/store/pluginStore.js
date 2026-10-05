@@ -3,16 +3,16 @@ import { api } from '../utils/api';
 
 // All available plugins definition
 export const ALL_PLUGINS = [
-  { id: 'salah-quran', name: 'Salah & Quran Tracker', description: 'Track your 5 daily prayers and Quran memorization journey with streaks, stats, and insights.', icon: '🕌', emoji: '🕌', color: 'from-gold-500 to-sage-400', available: true },
-  { id: 'movies', name: 'Movies & Series', description: 'Track what you\'ve watched, your watchlist, and ratings.', icon: '🎬', emoji: '🎬', color: 'from-purple-600 to-pink-500', available: true },
-  { id: 'books', name: 'Books Tracker', description: 'Your reading list, progress tracker, and book reviews.', icon: '📚', emoji: '📚', color: 'from-amber-600 to-orange-500', available: true },
-  { id: 'habits', name: 'Habit Tracker', description: 'Build and maintain positive habits with streaks and analytics.', icon: '⏱', emoji: '⏱', color: 'from-cyan-600 to-blue-500', available: true },
-  { id: 'routine', name: 'Daily Routine', description: 'Plan and schedule your daily routine with time blocks.', icon: '🗓', emoji: '🗓', color: 'from-teal-600 to-emerald-500', available: true },
-  { id: 'period', name: 'Period & Cycle', description: 'Track your cycle, symptoms, fertility, predictions, and personal phase insights.', icon: '🌸', emoji: '🌸', color: 'from-rose-500 to-pink-400', available: true },
-  { id: 'meals', name: 'Meal Tracker', description: 'Log meals, track macros (protein, carbs, fat, calories), hit daily nutrition goals with smart food search.', icon: '🥗', emoji: '🥗', color: 'from-green-500 to-emerald-400', available: true },
-  { id: 'journal', name: 'Notes & Journal', description: 'Private journal, quick notes, and daily reflections.', icon: '📝', emoji: '📝', color: 'from-violet-600 to-indigo-500', available: false },
-  { id: 'links', name: 'Save Links & Videos', description: 'Bookmark articles, videos, and resources for later.', icon: '🔗', emoji: '🔗', color: 'from-sky-600 to-blue-600', available: false },
-  { id: 'workout', name: 'Workout Logger', description: 'Log your workouts, track progress, and set fitness goals.', icon: '💪', emoji: '💪', color: 'from-red-600 to-rose-500', available: false },
+  { id: 'salah-quran', name: 'Salah & Quran Tracker', description: 'Track your 5 daily prayers and Quran memorization journey with streaks, stats, and insights.', icon: '🕌', emoji: '🕌', color: 'from-gold-500 to-sage-400', tint: '#E8F5EC', available: true },
+  { id: 'movies', name: 'Movies & Series', description: 'Track what you\'ve watched, your watchlist, and ratings.', icon: '🎬', emoji: '🎬', color: 'from-purple-600 to-pink-500', tint: '#F1E9FB', available: true },
+  { id: 'books', name: 'Books Tracker', description: 'Your reading list, progress tracker, and book reviews.', icon: '📚', emoji: '📚', color: 'from-amber-600 to-orange-500', tint: '#FFF0DE', available: true },
+  { id: 'habits', name: 'Habit Tracker', description: 'Build and maintain positive habits with streaks and analytics.', icon: '⏱', emoji: '⏱', color: 'from-cyan-600 to-blue-500', tint: '#E3F3F9', available: true },
+  { id: 'routine', name: 'Daily Routine', description: 'Plan and schedule your daily routine with time blocks.', icon: '🗓', emoji: '🗓', color: 'from-teal-600 to-emerald-500', tint: '#E2F6EE', available: true },
+  { id: 'period', name: 'Period & Cycle', description: 'Track your cycle, symptoms, fertility, predictions, and personal phase insights.', icon: '🌸', emoji: '🌸', color: 'from-rose-500 to-pink-400', tint: '#FFE8EE', available: true },
+  { id: 'meals', name: 'Meal Tracker', description: 'Log meals, track macros (protein, carbs, fat, calories), hit daily nutrition goals with smart food search.', icon: '🥗', emoji: '🥗', color: 'from-green-500 to-emerald-400', tint: '#E6F7E2', available: true },
+  { id: 'journal', name: 'Notes & Journal', description: 'Private journal, quick notes, and daily reflections.', icon: '📝', emoji: '📝', color: 'from-violet-600 to-indigo-500', tint: '#EFE8FA', available: false },
+  { id: 'links', name: 'Save Links & Videos', description: 'Bookmark articles, videos, and resources for later.', icon: '🔗', emoji: '🔗', color: 'from-sky-600 to-blue-600', tint: '#E1EFFC', available: false },
+  { id: 'workout', name: 'Workout Logger', description: 'Log your workouts, track progress, and set fitness goals.', icon: '💪', emoji: '💪', color: 'from-red-600 to-rose-500', tint: '#FFE9E3', available: false },
 ];
 
 export const usePluginStore = create((set, get) => ({

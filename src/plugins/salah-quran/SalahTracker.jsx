@@ -9,17 +9,17 @@ const NoteIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  ontime: { label: 'On Time', emoji: '✅', color: 'bg-sage-400/15 text-sage-300 border-sage-400/30', activeColor: 'bg-sage-400/30 text-sage-200 border-sage-400/60 shadow-sage-400/20 shadow-md' },
-  late:   { label: 'Late',    emoji: '🕐', color: 'bg-gold-400/15 text-gold-300 border-gold-400/30', activeColor: 'bg-gold-400/30 text-gold-200 border-gold-400/60 shadow-gold-400/20 shadow-md' },
-  missed: { label: 'Missed',  emoji: '❌', color: 'bg-red-500/10 text-red-400 border-red-500/20',    activeColor: 'bg-red-500/20 text-red-300 border-red-500/40 shadow-red-500/15 shadow-md'  },
+  ontime: { label: 'On Time', emoji: '✅', color: 'bg-emerald-50 text-emerald-400 border-emerald-100', activeColor: 'bg-emerald-100 text-emerald-200 border-emerald-500/60 shadow-emerald-500/20 shadow-md' },
+  late:   { label: 'Late',    emoji: '🕐', color: 'bg-amber-50 text-amber-400 border-amber-100', activeColor: 'bg-amber-100 text-amber-200 border-amber-500/60 shadow-amber-500/20 shadow-md' },
+  missed: { label: 'Missed',  emoji: '❌', color: 'bg-red-50 text-red-400 border-red-100',    activeColor: 'bg-red-100 text-red-200 border-red-500/50 shadow-red-500/15 shadow-md'  },
 };
 
 // ─── Score to color ───────────────────────────────────────────────────────────
 const scoreColor = (score) => {
-  if (score === 5) return '#4a7c59';
-  if (score >= 3) return '#d4af37';
-  if (score >= 1) return '#c0392b55';
-  return '#1a2545';
+  if (score === 5) return '#8ED9B8';
+  if (score >= 3) return '#F9D88B';
+  if (score >= 1) return '#F7B7C2';
+  return '#F1E6EA';
 };
 
 const scoreLabel = (score) => {
@@ -55,12 +55,12 @@ function PrayerRow({ prayer, prayerEntry, onStatusChange, onNoteChange }) {
       <div className="flex items-center justify-between gap-4">
         {/* Prayer name */}
         <div className="flex items-center gap-3 min-w-[120px]">
-          <div className="w-8 h-8 rounded-lg bg-navy-700 flex items-center justify-center text-xs font-arabic text-gold-400/70">
-            {prayer.arabic.charAt(0)}
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl" style={{ background: prayer.tint }} aria-hidden="true">
+            {prayer.icon}
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-200">{prayer.name}</div>
-            <div className="text-xs font-arabic text-gold-400/50">{prayer.arabic}</div>
+            <div className="text-sm font-extrabold text-slate-200">{prayer.name} <span className="font-arabic font-normal text-gold-400/70 ml-1">{prayer.arabic}</span></div>
+            <div className="text-xs text-slate-500">{prayer.time}</div>
           </div>
         </div>
 
@@ -176,7 +176,7 @@ function MonthlyCalendar({ year, month }) {
       </div>
       {/* Legend */}
       <div className="flex items-center gap-4 mt-3">
-        {[{ color: '#4a7c59', label: 'All 5' }, { color: '#d4af37', label: '3–4' }, { color: '#c0392b55', label: '1–2' }, { color: '#1a2545', label: 'None' }].map(({ color, label }) => (
+        {[{ color: '#8ED9B8', label: 'All 5' }, { color: '#F9D88B', label: '3–4' }, { color: '#F7B7C2', label: '1–2' }, { color: '#F1E6EA', label: 'None' }].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
             <span className="text-xs text-slate-500">{label}</span>

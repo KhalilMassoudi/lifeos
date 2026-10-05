@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { query } from './db.js';
+import { migrate } from './migrate.js';
 import authRoutes from './routes/auth.js';
 import pluginsRoutes from './routes/plugins.js';
 import salahRoutes from './routes/salah.js';
@@ -46,7 +47,14 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Start the server
+// Bring the database up to date, then start the server
+try {
+  await migrate();
+} catch (error) {
+  console.error('Database migration failed:', error);
+  process.exit(1);
+}
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

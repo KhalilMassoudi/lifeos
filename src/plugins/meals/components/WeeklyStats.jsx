@@ -76,11 +76,11 @@ export default function WeeklyStats() {
               <BarChart data={chartData} barCategoryGap="30%" margin={{ top: 4, bottom: 0, left: 0, right: 0 }}>
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 10, fill: '#64748b' }}
+                  tick={{ fontSize: 10, fill: '#7F6F81' }}
                   axisLine={false} tickLine={false}
                 />
                 <YAxis hide domain={[0, d => Math.max(d * 1.2, goal * 1.1, 1)]} />
-                <Tooltip content={<CustomTooltip unit={unit} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Tooltip content={<CustomTooltip unit={unit} />} cursor={{ fill: 'rgba(61,44,63,0.05)' }} />
                 {goal > 0 && (
                   <ReferenceLine y={goal} stroke={color} strokeDasharray="4 4" strokeOpacity={0.5} />
                 )}

@@ -12,7 +12,7 @@ router.use(requireAuth);
 
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM books ORDER BY created_at DESC');
+    const result = await query('SELECT * FROM books WHERE user_id = $1 ORDER BY created_at DESC', [req.userId]);
     res.json(result.rows);
   } catch (error) {
     console.error('Get books error:', error);
@@ -25,10 +25,10 @@ router.post('/', async (req, res) => {
     const { title, author, openlibrary_id, cover_url, genres, total_pages, pages_read, status, rating, notes, start_date, finish_date } = req.body;
     
     const result = await query(`
-      INSERT INTO books (title, author, openlibrary_id, cover_url, genres, total_pages, pages_read, status, rating, notes, start_date, finish_date)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO books (user_id, title, author, openlibrary_id, cover_url, genres, total_pages, pages_read, status, rating, notes, start_date, finish_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
-    `, [title, author, openlibrary_id, cover_url, genres, total_pages, pages_read, status, rating, notes, start_date, finish_date]);
+    `, [req.userId, title, author, openlibrary_id, cover_url, genres, total_pages, pages_read, status, rating, notes, start_date, finish_date]);
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -61,12 +61,12 @@ router.put('/:id', async (req, res) => {
     }
 
     updateFields.push(`updated_at = NOW()`);
-    params.push(id);
+    params.push(id, req.userId);
 
     const result = await query(`
       UPDATE books 
       SET ${updateFields.join(', ')}
-      WHERE id = $${paramIndex}
+      WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
       RETURNING *
     `, params);
 
@@ -84,7 +84,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await query('DELETE FROM books WHERE id = $1', [id]);
+    await query('DELETE FROM books WHERE id = $1 AND user_id = $2', [id, req.userId]);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete book error:', error);
@@ -98,7 +98,7 @@ router.delete('/:id', async (req, res) => {
 
 router.get('/sessions', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM book_sessions ORDER BY date DESC, created_at DESC');
+    const result = await query('SELECT * FROM book_sessions WHERE user_id = $1 ORDER BY date DESC, created_at DESC', [req.userId]);
     res.json(result.rows);
   } catch (error) {
     console.error('Get book sessions error:', error);
@@ -110,12 +110,16 @@ router.post('/sessions', async (req, res) => {
   try {
     const { book_id, date, pages_read, duration_minutes, notes } = req.body;
     
-    // Insert the session
+    const owned = await query('SELECT 1 FROM books WHERE id = $1 AND user_id = $2', [book_id, req.userId]);
+    if (owned.rows.length === 0) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+
     const result = await query(`
-      INSERT INTO book_sessions (book_id, date, pages_read, duration_minutes, notes)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO book_sessions (user_id, book_id, date, pages_read, duration_minutes, notes)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
-    `, [book_id, date, pages_read, duration_minutes, notes]);
+    `, [req.userId, book_id, date, pages_read, duration_minutes, notes]);
 
     // Also update the book's total pages_read if it's provided
     // This assumes pages_read in session is the number of pages read in that session
@@ -137,7 +141,7 @@ router.post('/sessions', async (req, res) => {
 router.delete('/sessions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await query('DELETE FROM book_sessions WHERE id = $1 RETURNING book_id, pages_read', [id]);
+    const deleted = await query('DELETE FROM book_sessions WHERE id = $1 AND user_id = $2 RETURNING book_id, pages_read', [id, req.userId]);
 
     // Take the session's pages back off the book's running total
     const session = deleted.rows[0];

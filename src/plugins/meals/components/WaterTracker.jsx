@@ -51,7 +51,7 @@ export default function WaterTracker() {
             key={i}
             onClick={() => i < filled ? removeLastWater() : addWater(GLASS_ML)}
             className={`flex-1 h-4 rounded-full transition-all duration-300 ${
-              i < filled ? 'bg-sky-400' : 'bg-white/8 hover:bg-white/15'
+              i < filled ? 'bg-gradient-to-r from-sky-600 to-sky-500' : 'bg-surface-sunken hover:bg-sky-50'
             }`}
             title={`${(i + 1) * GLASS_ML} ml`}
           />

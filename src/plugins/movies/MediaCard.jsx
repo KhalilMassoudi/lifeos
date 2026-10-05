@@ -143,7 +143,7 @@ export default function MediaCard({ item }) {
       {/* Detail Modal */}
       {isModalOpen && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 backdrop-blur-[3px] animate-fade-in"
           onClick={(e) => { e.stopPropagation(); setIsModalOpen(false); }}
         >
           <div 
@@ -217,7 +217,7 @@ export default function MediaCard({ item }) {
                 )}
 
                 {item.description && (
-                  <p className="text-sm text-slate-400 leading-relaxed bg-white/2 p-3 rounded-xl border border-white/5">
+                  <p className="text-sm text-slate-400 leading-relaxed bg-white/5 p-3 rounded-xl border border-white/5">
                     {item.description}
                   </p>
                 )}

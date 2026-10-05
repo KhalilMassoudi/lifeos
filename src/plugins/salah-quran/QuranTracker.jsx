@@ -103,7 +103,7 @@ function LogSessionModal({ onClose }) {
   };
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="modal-backdrop fixed inset-0 bg-black/25 backdrop-blur-[3px] flex items-center justify-center z-50 p-4">
       <div className="modal-content glass-card w-full max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ function LogSessionModal({ onClose }) {
                   key={type.id}
                   type="button"
                   onClick={() => setField('sessionType', type.id)}
-                  className={`p-3 rounded-xl border text-center transition-all ${form.sessionType === type.id ? 'bg-gold-400/15 border-gold-400/35 text-gold-300' : 'border-white/8 text-slate-500 hover:border-white/15'}`}
+                  className={`p-3 rounded-xl border text-center transition-all ${form.sessionType === type.id ? 'bg-gold-400/15 border-gold-400/35 text-gold-300' : 'border-white/10 text-slate-500 hover:border-white/15'}`}
                 >
                   <div className="text-xl">{type.icon}</div>
                   <div className="text-xs font-medium mt-1">{type.label}</div>
@@ -284,9 +284,9 @@ function MemorizationMap() {
   const completedSurahs = getCompletedSurahs(SURAHS);
 
   const COLORS = {
-    [AYAH_STATUS.MEMORIZED]: '#4a7c59',
-    [AYAH_STATUS.IN_PROGRESS]: '#d4af37',
-    [AYAH_STATUS.NOT_STARTED]: '#1a2545',
+    [AYAH_STATUS.MEMORIZED]: '#8ED9B8',
+    [AYAH_STATUS.IN_PROGRESS]: '#F9D88B',
+    [AYAH_STATUS.NOT_STARTED]: '#F1E6EA',
   };
 
   return (
@@ -407,11 +407,12 @@ function QuranHeatmap() {
 
   const maxMinutes = Math.max(...data.map(d => d.minutes), 1);
   const getColor = (minutes) => {
-    if (minutes === 0) return '#1a2545';
+    if (minutes === 0) return '#F1E6EA';
     const intensity = Math.min(minutes / maxMinutes, 1);
-    const r = Math.round(74 + (212 - 74) * (1 - intensity));
-    const g = Math.round(124 + (175 - 124) * (1 - intensity));
-    const b = Math.round(89 + (55 - 89) * (1 - intensity));
+    // pale mint (#DDF5E9) → deep mint (#3FA37C)
+    const r = Math.round(221 + (63 - 221) * intensity);
+    const g = Math.round(245 + (163 - 245) * intensity);
+    const b = Math.round(233 + (124 - 233) * intensity);
     return `rgb(${r},${g},${b})`;
   };
 
@@ -495,7 +496,7 @@ function ReminderSettings() {
       </div>
 
       {permissionStatus !== 'granted' && (
-        <div className="p-3 rounded-xl bg-gold-400/8 border border-gold-400/15 flex items-center justify-between gap-3">
+        <div className="p-3 rounded-xl bg-gold-400/10 border border-gold-400/15 flex items-center justify-between gap-3">
           <span className="text-xs text-slate-400">Enable browser notifications to receive Quran reminders.</span>
           <button onClick={requestPermission} className="text-xs bg-gold-400/20 text-gold-300 border border-gold-400/25 px-3 py-1.5 rounded-lg hover:bg-gold-400/30 transition-all flex-shrink-0">
             Allow

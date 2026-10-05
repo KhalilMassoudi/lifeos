@@ -1,20 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── CSS Custom Properties ── */
+/* ── Theme tokens (RGB triplets so Tailwind can apply opacity) ──
+   See tailwind.config.js for how classes map onto these. The --accent-*
+   values are replaced at runtime with the signed-in profile's palette. */
 :root {
-  --navy-950: #050912;
-  --navy-900: #0a0f1e;
-  --navy-800: #0f1629;
-  --navy-700: #141d35;
-  --gold-400: #d4af37;
-  --gold-300: #eecf52;
-  --sage-400: #4a7c59;
-  --sidebar-width: 240px;
-  --sidebar-collapsed: 64px;
+  /* Surfaces: cream paper → white cards → blush-grey lines */
+  --surface-950: 252 247 242; /* page */
+  --surface-900: 255 251 247; /* shell, headers */
+  --surface-800: 255 255 255; /* cards, modals */
+  --surface-700: 248 240 241; /* sunken fills, chips, inputs */
+  --surface-600: 241 230 234; /* hover */
+  --surface-500: 232 218 224; /* lines */
+
+  /* Ink: deep plum text down to faint hints */
+  --ink-50: 40 28 42;
+  --ink-100: 52 38 54;
+  --ink-200: 61 44 63;
+  --ink-300: 80 63 82;
+  --ink-400: 107 92 109;
+  --ink-500: 127 111 129;
+  --ink-600: 160 147 161;
+  --ink-700: 196 185 196;
+  --ink-800: 227 218 223;
+  --ink-900: 243 236 238;
+  --ink-950: 250 246 247;
+
+  --ink: 61 44 63; /* = --ink-200; legacy `white` classes map here */
+  --plum: 43 29 44;
+
+  /* Default accent (blush) until a profile is signed in */
+  --accent-50: 255 245 247;
+  --accent-100: 255 232 238;
+  --accent-200: 251 208 219;
+  --accent-300: 247 168 184;
+  --accent-400: 221 102 135;
+  --accent-500: 194 77 112;
+  --accent-600: 158 58 89;
+
+  --sidebar-width: 248px;
+  --sidebar-collapsed: 68px;
 }
 
 /* ── Base Reset ── */
@@ -31,69 +57,88 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: var(--navy-900);
-  color: #e2e8f0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  background-color: rgb(var(--surface-950));
+  color: rgb(var(--ink-200));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Fraunces' soft, rounded cut for every display heading */
+.font-display {
+  font-variation-settings: 'SOFT' 100, 'opsz' 72;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--accent-400) / 0.7);
+  outline-offset: 2px;
+}
+
 /* ── Scrollbar Styling ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--accent-300) / 0.6) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--navy-800);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 3px;
+  background: rgb(var(--accent-300) / 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+  background: rgb(var(--accent-400) / 0.6);
+  background-clip: padding-box;
 }
 
 /* ── Selection ── */
 ::selection {
-  background-color: rgba(212, 175, 55, 0.3);
-  color: #fdf9e7;
+  background-color: rgb(var(--accent-200));
+  color: rgb(var(--ink-100));
 }
 
-/* ── Islamic Geometric Background ── */
+/* ── Paper background with soft pastel washes (lock screen, loading) ── */
 .geometric-bg {
-  background-color: var(--navy-900);
+  background-color: rgb(var(--surface-950));
   background-image:
-    radial-gradient(circle at 20% 50%, rgba(212,175,55,0.05) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(74,124,89,0.06) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.035'%3E%3Cpath d='M40 0L50 10L40 20L30 10zm0 60L50 70L40 80L30 70zM0 40L10 30L20 40L10 50zm60 0L70 30L80 40L70 50zM10 10L20 0L30 10L20 20zm40 0L60 0L70 10L60 20zm0 40L60 40L70 50L60 60zM10 50L20 40L30 50L20 60z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    radial-gradient(ellipse at 15% 20%, rgb(var(--accent-200) / 0.55) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 15%, rgb(195 177 225 / 0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 90%, rgb(168 230 207 / 0.35) 0%, transparent 50%);
 }
 
-/* ── Glass Card ── */
+/* ── Cards ── */
 .glass-card {
-  background: rgba(15, 22, 41, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.12);
-  border-radius: 16px;
+  background: rgb(var(--surface-800));
+  border: 1px solid rgb(var(--surface-500) / 0.7);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgb(var(--plum) / 0.04), 0 4px 16px -4px rgb(var(--plum) / 0.08);
 }
 
 .glass-card-sm {
-  background: rgba(20, 29, 53, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(212, 175, 55, 0.08);
-  border-radius: 12px;
+  background: rgb(var(--surface-800));
+  border: 1px solid rgb(var(--surface-500) / 0.7);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgb(var(--plum) / 0.03), 0 2px 10px -4px rgb(var(--plum) / 0.07);
 }
 
-/* ── Gold Glow ── */
 .gold-glow {
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), 0 0 60px rgba(212, 175, 55, 0.05);
+  box-shadow: 0 2px 4px rgb(var(--plum) / 0.04), 0 24px 60px -16px rgb(var(--accent-400) / 0.35);
 }
 
+/* Accent gradient text for headings */
 .gold-text {
-  background: linear-gradient(135deg, #d4af37, #f0d96b, #d4af37);
+  background: linear-gradient(120deg, rgb(var(--accent-500)), rgb(var(--accent-400)) 55%, #8C70C4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -132,7 +177,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.15), transparent);
+  background: radial-gradient(circle at center, rgb(255 255 255 / 0.5), transparent);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -173,35 +218,42 @@ body {
   transform: scale(1.2);
 }
 
-/* ── Input Styles ── */
+/* ── Inputs ── */
 .lifeos-input {
-  background: rgba(10, 15, 30, 0.8);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-  color: #e2e8f0;
+  background: rgb(var(--surface-700) / 0.6);
+  border: 1.5px solid rgb(var(--surface-500));
+  border-radius: 12px;
+  color: rgb(var(--ink-200));
   padding: 10px 14px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 14px;
   width: 100%;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   outline: none;
 }
 
 .lifeos-input:focus {
-  border-color: rgba(212, 175, 55, 0.5);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
+  background: rgb(var(--surface-800));
+  border-color: rgb(var(--accent-300));
+  box-shadow: 0 0 0 4px rgb(var(--accent-200) / 0.45);
 }
 
 .lifeos-input::placeholder {
-  color: rgba(148, 163, 184, 0.5);
+  color: rgb(var(--ink-600));
 }
 
 select.lifeos-input option {
-  background: #0f1629;
-  color: #e2e8f0;
+  background: rgb(var(--surface-800));
+  color: rgb(var(--ink-200));
 }
 
-/* ── Modal Backdrop ── */
+/* Native date/time pickers: plum icons instead of black */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.55;
+}
+
+/* ── Modals ── */
 .modal-backdrop {
   animation: fadeIn 0.2s ease;
 }
@@ -216,14 +268,14 @@ select.lifeos-input option {
 }
 
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Progress Bar ── */
 .progress-bar-fill {
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(90deg, var(--sage-400), var(--gold-400));
+  background: linear-gradient(90deg, #A8E6CF, rgb(var(--accent-300)), rgb(var(--accent-400)));
 }
 
 /* ── Tabs ── */
@@ -233,12 +285,12 @@ select.lifeos-input option {
 
 /* ── Lock Screen ── */
 .lock-screen-orb {
-  animation: orbPulse 4s ease-in-out infinite;
+  animation: orbPulse 6s ease-in-out infinite;
 }
 
 @keyframes orbPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.08); }
+  0%, 100% { opacity: 0.5; transform: scale(1) translateY(0); }
+  50% { opacity: 0.8; transform: scale(1.06) translateY(-12px); }
 }
 
 /* ── Tooltip ── */
@@ -252,14 +304,13 @@ select.lifeos-input option {
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(5, 9, 18, 0.95);
-  color: #e2e8f0;
+  background: rgb(var(--ink-200));
+  color: rgb(var(--surface-800));
   font-size: 11px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 8px;
   white-space: nowrap;
   pointer-events: none;
-  border: 1px solid rgba(212,175,55,0.2);
   z-index: 100;
 }
 
@@ -290,9 +341,9 @@ select.lifeos-input option {
 }
 
 .plugin-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,55,0.1);
-  border-color: rgba(212, 175, 55, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgb(var(--plum) / 0.04), 0 14px 32px -10px rgb(var(--accent-400) / 0.3);
+  border-color: rgb(var(--accent-300) / 0.6);
 }
 
 /* ── Nav Item ── */
@@ -305,11 +356,11 @@ select.lifeos-input option {
   content: '';
   position: absolute;
   left: 0;
-  top: 20%;
-  height: 60%;
-  width: 3px;
-  background: linear-gradient(180deg, var(--gold-400), var(--sage-400));
-  border-radius: 0 3px 3px 0;
+  top: 22%;
+  height: 56%;
+  width: 4px;
+  background: linear-gradient(180deg, rgb(var(--accent-300)), rgb(var(--accent-400)));
+  border-radius: 0 4px 4px 0;
 }
 
 /* ── Notification Badge ── */
@@ -318,6 +369,15 @@ select.lifeos-input option {
 }
 
 @keyframes notifyPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
-  50% { box-shadow: 0 0 0 5px rgba(212, 175, 55, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--accent-400) / 0.4); }
+  50% { box-shadow: 0 0 0 5px rgb(var(--accent-400) / 0); }
+}
+
+/* ── Respect reduced-motion preferences ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

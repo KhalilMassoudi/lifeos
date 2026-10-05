@@ -9,7 +9,7 @@ router.use(requireAuth);
 // Get all media items
 router.get('/', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM media_items ORDER BY created_at DESC');
+    const result = await query('SELECT * FROM media_items WHERE user_id = $1 ORDER BY created_at DESC', [req.userId]);
     res.json(result.rows);
   } catch (error) {
     console.error('Get media error:', error);
@@ -46,10 +46,10 @@ router.post('/', async (req, res) => {
     const dbRating = (finalRating === 0 || finalRating === '0' || finalRating === '' || finalRating === undefined || finalRating === null) ? null : parseInt(finalRating, 10);
 
     const result = await query(`
-      INSERT INTO media_items (title, tmdb_id, poster_url, description, release_year, genres, rating, status, notes, type, current_season, current_episode, imdb_rating, duration, director, "cast", imdb_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      INSERT INTO media_items (user_id, title, tmdb_id, poster_url, description, release_year, genres, rating, status, notes, type, current_season, current_episode, imdb_rating, duration, director, "cast", imdb_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
-    `, [title, tmdb_id, poster_url, description, release_year, genres, dbRating, status, notes, type, current_season, current_episode, imdb_rating, duration, director, cast, imdb_id]);
+    `, [req.userId, title, tmdb_id, poster_url, description, release_year, genres, dbRating, status, notes, type, current_season, current_episode, imdb_rating, duration, director, cast, imdb_id]);
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -116,12 +116,12 @@ const handleUpdate = async (req, res) => {
     }
 
     updateFields.push(`updated_at = NOW()`);
-    params.push(id);
+    params.push(id, req.userId);
 
     const result = await query(`
       UPDATE media_items 
       SET ${updateFields.join(', ')}
-      WHERE id = $${paramIndex}
+      WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
       RETURNING *
     `, params);
 
@@ -143,7 +143,7 @@ router.patch('/:id', handleUpdate);
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await query('DELETE FROM media_items WHERE id = $1', [id]);
+    await query('DELETE FROM media_items WHERE id = $1 AND user_id = $2', [id, req.userId]);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete media error:', error);

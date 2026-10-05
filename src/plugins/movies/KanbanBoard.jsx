@@ -35,14 +35,14 @@ export default function KanbanBoard({ type }) {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex-1 overflow-x-auto overflow-y-hidden pt-4 pb-2">
-        <div className="flex gap-4 h-full min-w-max px-6">
+        <div className="flex gap-4 h-full min-w-max lg:min-w-0 px-6">
           {COLUMNS.map(col => {
             const colItems = items.filter(i => i.status === col.id);
             
             return (
               <div 
                 key={col.id}
-                className="flex flex-col w-72 bg-navy-900/50 rounded-2xl border border-white/5 overflow-hidden"
+                className="flex flex-col w-72 lg:w-auto lg:flex-1 lg:min-w-[220px] bg-navy-900/50 rounded-2xl border border-white/5 overflow-hidden"
               >
                 {/* Header */}
                 <div className={`p-4 border-b ${col.color} bg-navy-900 flex items-center justify-between`}>

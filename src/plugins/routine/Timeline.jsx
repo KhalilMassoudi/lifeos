@@ -3,11 +3,11 @@ import { useRoutineStore } from './routineStore';
 import { Check, Trash2 } from 'lucide-react';
 
 const CATEGORIES = {
-  morning: 'border-amber-400 text-amber-400 bg-amber-400/10',
-  work: 'border-cyan-400 text-cyan-400 bg-cyan-400/10',
-  personal: 'border-emerald-400 text-emerald-400 bg-emerald-400/10',
-  evening: 'border-indigo-400 text-indigo-400 bg-indigo-400/10',
-  night: 'border-purple-400 text-purple-400 bg-purple-400/10',
+  morning: 'border-amber-500 text-amber-400 bg-amber-50',
+  work: 'border-sky-500 text-sky-400 bg-sky-50',
+  personal: 'border-emerald-500 text-emerald-400 bg-emerald-50',
+  evening: 'border-indigo-500 text-indigo-400 bg-indigo-50',
+  night: 'border-purple-500 text-purple-400 bg-purple-50',
 };
 
 export default function Timeline() {
@@ -15,6 +15,15 @@ export default function Timeline() {
   const [now, setNow] = useState(new Date());
   const today = new Date();
   const timelineRef = useRef(null);
+
+  // Open the timeline scrolled to about an hour before now
+  useEffect(() => {
+    const el = timelineRef.current;
+    if (!el) return;
+    const content = el.firstElementChild;
+    const hours = Math.max(new Date().getHours() - 1, 0);
+    el.scrollTop = (content?.offsetHeight || 1200) * (hours / 24);
+  }, [blocks.length > 0]);
 
   // Update current time line every minute
   useEffect(() => {

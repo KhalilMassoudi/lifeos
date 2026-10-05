@@ -134,7 +134,7 @@ export default function PeriodTrackerPlugin() {
     
     // Logged period day
     if (logs[dateStr]?.is_period_day) {
-      return { type: 'logged-period', color: 'bg-rose-600 shadow-[0_0_8px_rgba(244,63,94,0.6)]' };
+      return { type: 'logged-period', color: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.45)]' };
     }
 
     if (!stats || !cycles.length) {
@@ -395,7 +395,7 @@ export default function PeriodTrackerPlugin() {
               {/* Legend */}
               <div className="flex flex-wrap gap-4 mt-6 pt-4 border-t border-white/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider justify-center">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-[0_0_5px_rgba(244,63,94,0.4)]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.35)]" />
                   <span>Period Day</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -473,7 +473,7 @@ export default function PeriodTrackerPlugin() {
                     Object.entries(stats.dominantMoods).map(([phase, mood]) => {
                       if (!mood) return null;
                       return (
-                        <div key={phase} className="p-3 bg-white/2 border border-white/5 rounded-xl text-xs flex items-center gap-3">
+                        <div key={phase} className="p-3 bg-white/5 border border-white/5 rounded-xl text-xs flex items-center gap-3">
                           <span className="text-2xl">{mood}</span>
                           <div>
                             <span className="text-slate-500 block">Dominant Mood in {phase}</span>
@@ -483,7 +483,7 @@ export default function PeriodTrackerPlugin() {
                       );
                     })
                   ) : (
-                    <div className="p-3 bg-white/2 border border-white/5 rounded-xl text-xs flex items-center gap-3 text-slate-500">
+                    <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-xs flex items-center gap-3 text-slate-500">
                       <Info className="w-4 h-4 text-rose-400" />
                       <span>Log your mood emojis daily in the calendar to generate personal emotional insights.</span>
                     </div>
@@ -491,13 +491,13 @@ export default function PeriodTrackerPlugin() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-                  <div className="bg-white/2 border border-white/5 p-3 rounded-xl text-center">
+                  <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-center">
                     <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Avg Cycle</span>
                     <span className="text-lg font-bold text-rose-400 mt-1 block">
                       {stats?.averageCycleLength || 28} days
                     </span>
                   </div>
-                  <div className="bg-white/2 border border-white/5 p-3 rounded-xl text-center">
+                  <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-center">
                     <span className="text-slate-500 block text-[10px] uppercase font-bold tracking-wider">Avg Duration</span>
                     <span className="text-lg font-bold text-rose-400 mt-1 block">
                       {stats?.averagePeriodDuration || 5} days
@@ -535,7 +535,7 @@ export default function PeriodTrackerPlugin() {
                       {/* Cycle Row Main */}
                       <div 
                         onClick={() => setExpandedCycleId(isExpanded ? null : cycle.id)}
-                        className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/2 transition-all"
+                        className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-all"
                       >
                         <div className="space-y-1">
                           <span className="text-xs text-slate-500 font-semibold uppercase">
@@ -739,7 +739,7 @@ export default function PeriodTrackerPlugin() {
               
               {/* Period Day Switch */}
               <div className="space-y-4">
-                <label className="flex items-center justify-between p-3 bg-white/2 border border-white/5 rounded-xl cursor-pointer hover:border-white/10 transition-colors">
+                <label className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:border-white/10 transition-colors">
                   <div>
                     <span className="text-xs font-bold text-slate-300 block">Period Bleeding Day</span>
                     <span className="text-[10px] text-slate-500">Toggle if you are experiencing period flow.</span>
@@ -801,7 +801,7 @@ export default function PeriodTrackerPlugin() {
                         className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
                           flowIntensity === intensity.id 
                             ? intensity.color
-                            : 'border-white/5 bg-white/2 text-slate-400 hover:bg-white/5'
+                            : 'border-white/5 bg-white/5 text-slate-400 hover:bg-white/5'
                         }`}
                       >
                         {intensity.label}
@@ -825,7 +825,7 @@ export default function PeriodTrackerPlugin() {
                         className={`p-2 rounded-xl text-2xl flex items-center justify-center transition-all ${
                           isSelected 
                             ? 'bg-rose-500/10 border border-rose-500/30 scale-105' 
-                            : 'bg-white/2 border border-white/5 opacity-50 hover:opacity-100'
+                            : 'bg-white/5 border border-white/5 opacity-50 hover:opacity-100'
                         }`}
                       >
                         {m.emoji}
@@ -842,7 +842,7 @@ export default function PeriodTrackerPlugin() {
                   <span className="text-slate-300 font-bold">Level {energyLevel}/5</span>
                 </div>
                 
-                <div className="flex items-center gap-3 bg-white/2 border border-white/5 p-3 rounded-xl">
+                <div className="flex items-center gap-3 bg-white/5 border border-white/5 p-3 rounded-xl">
                   <span className="text-xl">🪫</span>
                   <input 
                     type="range"
@@ -869,7 +869,7 @@ export default function PeriodTrackerPlugin() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
                           isSelected 
                             ? 'bg-rose-600/10 border-rose-600/30 text-rose-300' 
-                            : 'border-white/5 bg-white/2 text-slate-400 hover:border-white/10 hover:text-slate-300'
+                            : 'border-white/5 bg-white/5 text-slate-400 hover:border-white/10 hover:text-slate-300'
                         }`}
                       >
                         {s}

@@ -110,7 +110,7 @@ router.get('/day/:date', async (req, res) => {
         ) AS entries
       FROM meals m
       LEFT JOIN meal_entries e ON e.meal_id = m.id
-      WHERE m.meal_date = $1
+      WHERE m.user_id = $1 AND m.meal_date = $2
       GROUP BY m.id
       ORDER BY
         CASE m.meal_type
@@ -119,7 +119,7 @@ router.get('/day/:date', async (req, res) => {
           WHEN 'dinner'    THEN 3
           ELSE 4
         END
-    `, [date]);
+    `, [req.userId, date]);
 
     res.json(result.rows);
   } catch (error) {
@@ -130,10 +130,12 @@ router.get('/day/:date', async (req, res) => {
 
 // ── GOALS ─────────────────────────────────────────────────────────────────────
 
+const DEFAULT_GOALS = { calories: 2000, protein_g: 150, carbs_g: 250, fat_g: 65, fiber_g: 30, water_ml: 2000 };
+
 router.get('/goals', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM nutrition_goals LIMIT 1');
-    res.json(result.rows[0] || { calories: 2000, protein_g: 150, carbs_g: 250, fat_g: 65, fiber_g: 30, water_ml: 2000 });
+    const result = await query('SELECT * FROM nutrition_goals WHERE user_id = $1 LIMIT 1', [req.userId]);
+    res.json(result.rows[0] || DEFAULT_GOALS);
   } catch (error) {
     console.error('Get goals error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -143,21 +145,19 @@ router.get('/goals', async (req, res) => {
 router.post('/goals', async (req, res) => {
   try {
     const { calories, protein_g, carbs_g, fat_g, fiber_g, water_ml } = req.body;
-    const existing = await query('SELECT id FROM nutrition_goals LIMIT 1');
-    let result;
-    if (existing.rows[0]) {
-      result = await query(
-        `UPDATE nutrition_goals
-         SET calories=$1, protein_g=$2, carbs_g=$3, fat_g=$4, fiber_g=$5, water_ml=$6, updated_at=NOW()
-         WHERE id=$7 RETURNING *`,
-        [calories, protein_g, carbs_g, fat_g, fiber_g, water_ml, existing.rows[0].id]
-      );
-    } else {
-      result = await query(
-        'INSERT INTO nutrition_goals (calories, protein_g, carbs_g, fat_g, fiber_g, water_ml) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-        [calories, protein_g, carbs_g, fat_g, fiber_g, water_ml]
-      );
-    }
+    const values = [calories, protein_g, carbs_g, fat_g, fiber_g, water_ml];
+    const existing = await query('SELECT id FROM nutrition_goals WHERE user_id = $1 LIMIT 1', [req.userId]);
+    const result = existing.rows[0]
+      ? await query(
+          `UPDATE nutrition_goals
+           SET calories=$1, protein_g=$2, carbs_g=$3, fat_g=$4, fiber_g=$5, water_ml=$6, updated_at=NOW()
+           WHERE id=$7 RETURNING *`,
+          [...values, existing.rows[0].id]
+        )
+      : await query(
+          'INSERT INTO nutrition_goals (calories, protein_g, carbs_g, fat_g, fiber_g, water_ml, user_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+          [...values, req.userId]
+        );
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Save goals error:', error);
@@ -178,10 +178,10 @@ router.get('/stats/week', async (req, res) => {
         ROUND(COALESCE(SUM(e.fat_g),     0)::numeric, 1) AS fat
       FROM meals m
       LEFT JOIN meal_entries e ON e.meal_id = m.id
-      WHERE m.meal_date >= CURRENT_DATE - INTERVAL '6 days'
+      WHERE m.user_id = $1 AND m.meal_date >= CURRENT_DATE - INTERVAL '6 days'
       GROUP BY m.meal_date
       ORDER BY m.meal_date
-    `);
+    `, [req.userId]);
     res.json(result.rows);
   } catch (error) {
     console.error('Week stats error:', error);
@@ -194,8 +194,8 @@ router.get('/stats/week', async (req, res) => {
 router.get('/water/:date', async (req, res) => {
   try {
     const result = await query(
-      'SELECT * FROM water_logs WHERE log_date = $1 ORDER BY logged_at',
-      [req.params.date]
+      'SELECT * FROM water_logs WHERE user_id = $1 AND log_date = $2 ORDER BY logged_at',
+      [req.userId, req.params.date]
     );
     res.json(result.rows);
   } catch (error) {
@@ -208,8 +208,8 @@ router.post('/water', async (req, res) => {
   try {
     const { log_date, amount_ml } = req.body;
     const result = await query(
-      'INSERT INTO water_logs (log_date, amount_ml) VALUES ($1, $2) RETURNING *',
-      [log_date, amount_ml || 250]
+      'INSERT INTO water_logs (user_id, log_date, amount_ml) VALUES ($1, $2, $3) RETURNING *',
+      [req.userId, log_date, amount_ml || 250]
     );
     res.json(result.rows[0]);
   } catch (error) {
@@ -220,7 +220,7 @@ router.post('/water', async (req, res) => {
 
 router.delete('/water/:id', async (req, res) => {
   try {
-    await query('DELETE FROM water_logs WHERE id = $1', [req.params.id]);
+    await query('DELETE FROM water_logs WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete water error:', error);
@@ -238,13 +238,18 @@ router.post('/entries', async (req, res) => {
     const qty = parseFloat(quantity_g) || 100;
     const calc = (v) => v != null ? Math.round(parseFloat(v) * qty / 100 * 10) / 10 : null;
 
+    const owned = await query('SELECT 1 FROM meals WHERE id = $1 AND user_id = $2', [meal_id, req.userId]);
+    if (owned.rows.length === 0) {
+      return res.status(404).json({ error: 'Meal not found' });
+    }
+
     const result = await query(`
       INSERT INTO meal_entries
-        (meal_id, food_item_id, food_name, quantity_g, calories, protein_g, carbs_g, fat_g, fiber_g)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        (user_id, meal_id, food_item_id, food_name, quantity_g, calories, protein_g, carbs_g, fat_g, fiber_g)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *
     `, [
-      meal_id, food_item_id || null, food_name, qty,
+      req.userId, meal_id, food_item_id || null, food_name, qty,
       calc(calories_per_100g), calc(protein_per_100g),
       calc(carbs_per_100g),    calc(fat_per_100g),
       calc(fiber_per_100g),
@@ -258,7 +263,7 @@ router.post('/entries', async (req, res) => {
 
 router.delete('/entries/:id', async (req, res) => {
   try {
-    await query('DELETE FROM meal_entries WHERE id = $1', [req.params.id]);
+    await query('DELETE FROM meal_entries WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete entry error:', error);
@@ -272,8 +277,8 @@ router.post('/', async (req, res) => {
   try {
     const { meal_date, meal_type, name } = req.body;
     const result = await query(
-      'INSERT INTO meals (meal_date, meal_type, name) VALUES ($1, $2, $3) RETURNING *',
-      [meal_date, meal_type, name || null]
+      'INSERT INTO meals (user_id, meal_date, meal_type, name) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.userId, meal_date, meal_type, name || null]
     );
     res.json({
       ...result.rows[0],
@@ -287,7 +292,7 @@ router.post('/', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    await query('DELETE FROM meals WHERE id = $1', [req.params.id]);
+    await query('DELETE FROM meals WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
     res.json({ success: true });
   } catch (error) {
     console.error('Delete meal error:', error);

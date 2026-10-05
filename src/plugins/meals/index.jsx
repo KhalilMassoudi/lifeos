@@ -100,7 +100,7 @@ export default function MealTrackerPlugin() {
               onClick={() => setTab(id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all ${
                 tab === id
-                  ? 'bg-green-600 text-white shadow-lg shadow-green-900/30'
+                  ? 'bg-surface text-ink shadow-soft'
                   : 'text-slate-400 hover:text-white'
               }`}
             >

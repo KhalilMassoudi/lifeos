@@ -62,14 +62,24 @@ function daysBetween(fromStr, toStr) {
   return Math.round((toUtc(toStr) - toUtc(fromStr)) / (1000 * 60 * 60 * 24));
 }
 
+// This profile's settings row, created with defaults on first use
+async function getSettings(userId) {
+  await query(`
+    INSERT INTO period_settings (user_id)
+    SELECT $1 WHERE NOT EXISTS (SELECT 1 FROM period_settings WHERE user_id = $1)
+  `, [userId]);
+  const result = await query('SELECT * FROM period_settings WHERE user_id = $1 LIMIT 1', [userId]);
+  return result.rows[0];
+}
+
 // Helper: Recalculate period_cycles based on period_logs
-async function recalculateCycles() {
+async function recalculateCycles(userId) {
   const logsRes = await query(`
     SELECT log_date, is_period_day, is_period_start, is_period_end 
     FROM period_logs 
-    WHERE is_period_day = TRUE OR is_period_start = TRUE OR is_period_end = TRUE
+    WHERE user_id = $1 AND (is_period_day = TRUE OR is_period_start = TRUE OR is_period_end = TRUE)
     ORDER BY log_date ASC
-  `);
+  `, [userId]);
   
   const logs = logsRes.rows.map(r => {
     return {
@@ -81,7 +91,7 @@ async function recalculateCycles() {
   });
 
   if (logs.length === 0) {
-    await query('DELETE FROM period_cycles');
+    await query('DELETE FROM period_cycles WHERE user_id = $1', [userId]);
     return;
   }
 
@@ -131,15 +141,15 @@ async function recalculateCycles() {
   }
 
   // Delete all and write recalculated cycles
-  await query('DELETE FROM period_cycles');
+  await query('DELETE FROM period_cycles WHERE user_id = $1', [userId]);
   for (const c of cycles) {
     const dbPeriodDuration = isNaN(c.period_duration) ? 1 : c.period_duration;
     const dbCycleLength = (c.cycle_length && !isNaN(c.cycle_length)) ? c.cycle_length : null;
 
     await query(`
-      INSERT INTO period_cycles (start_date, end_date, cycle_length, period_duration)
-      VALUES ($1, $2, $3, $4)
-    `, [c.start_date, c.end_date, dbCycleLength, dbPeriodDuration]);
+      INSERT INTO period_cycles (user_id, start_date, end_date, cycle_length, period_duration)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [userId, c.start_date, c.end_date, dbCycleLength, dbPeriodDuration]);
   }
 }
 
@@ -152,9 +162,9 @@ router.get('/logs', async (req, res) => {
     }
     const result = await query(`
       SELECT * FROM period_logs 
-      WHERE TO_CHAR(log_date, 'YYYY-MM') = $1
+      WHERE user_id = $1 AND TO_CHAR(log_date, 'YYYY-MM') = $2
       ORDER BY log_date ASC
-    `, [month]);
+    `, [req.userId, month]);
 
     const formattedRows = result.rows.map(r => ({
       ...r,
@@ -188,9 +198,9 @@ router.post('/log', async (req, res) => {
     }
 
     const result = await query(`
-      INSERT INTO period_logs (log_date, is_period_day, is_period_start, is_period_end, flow_intensity, moods, symptoms, energy_level, notes, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
-      ON CONFLICT (log_date) 
+      INSERT INTO period_logs (user_id, log_date, is_period_day, is_period_start, is_period_end, flow_intensity, moods, symptoms, energy_level, notes, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      ON CONFLICT (user_id, log_date) 
       DO UPDATE SET 
         is_period_day = EXCLUDED.is_period_day,
         is_period_start = EXCLUDED.is_period_start,
@@ -202,10 +212,10 @@ router.post('/log', async (req, res) => {
         notes = EXCLUDED.notes,
         updated_at = NOW()
       RETURNING *
-    `, [log_date, is_period_day, is_period_start, is_period_end, flow_intensity, moods, symptoms, energy_level, notes]);
+    `, [req.userId, log_date, is_period_day, is_period_start, is_period_end, flow_intensity, moods, symptoms, energy_level, notes]);
 
     // Recalculate cycles
-    await recalculateCycles();
+    await recalculateCycles(req.userId);
 
     const formattedLog = {
       ...result.rows[0],
@@ -221,7 +231,7 @@ router.post('/log', async (req, res) => {
 // GET /api/period/cycles — get all cycle history
 router.get('/cycles', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM period_cycles ORDER BY start_date DESC');
+    const result = await query('SELECT * FROM period_cycles WHERE user_id = $1 ORDER BY start_date DESC', [req.userId]);
     const formatted = result.rows.map(r => ({
       ...r,
       start_date: formatLocalDate(r.start_date),
@@ -237,8 +247,7 @@ router.get('/cycles', async (req, res) => {
 // GET /api/period/settings — get settings
 router.get('/settings', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM period_settings LIMIT 1');
-    res.json(result.rows[0]);
+    res.json(await getSettings(req.userId));
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -249,14 +258,16 @@ router.get('/settings', async (req, res) => {
 router.put('/settings', async (req, res) => {
   try {
     const { average_cycle_length, average_period_duration, reminder_time, show_fertile_window } = req.body;
+    await getSettings(req.userId); // make sure this profile has a settings row
     const result = await query(`
       UPDATE period_settings
       SET average_cycle_length = COALESCE($1, average_cycle_length),
           average_period_duration = COALESCE($2, average_period_duration),
           reminder_time = COALESCE($3, reminder_time),
           show_fertile_window = COALESCE($4, show_fertile_window)
+      WHERE user_id = $5
       RETURNING *
-    `, [average_cycle_length, average_period_duration, reminder_time, show_fertile_window]);
+    `, [average_cycle_length, average_period_duration, reminder_time, show_fertile_window, req.userId]);
     
     res.json(result.rows[0]);
   } catch (error) {
@@ -269,13 +280,12 @@ router.put('/settings', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     // 1. Fetch settings & cycles
-    const [settingsRes, cyclesRes, logsRes] = await Promise.all([
-      query('SELECT * FROM period_settings LIMIT 1'),
-      query('SELECT * FROM period_cycles ORDER BY start_date DESC'),
-      query('SELECT log_date, moods, is_period_day FROM period_logs ORDER BY log_date ASC')
+    const [settings, cyclesRes, logsRes] = await Promise.all([
+      getSettings(req.userId),
+      query('SELECT * FROM period_cycles WHERE user_id = $1 ORDER BY start_date DESC', [req.userId]),
+      query('SELECT log_date, moods, is_period_day FROM period_logs WHERE user_id = $1 ORDER BY log_date ASC', [req.userId])
     ]);
 
-    const settings = settingsRes.rows[0] || { average_cycle_length: 28, average_period_duration: 5, show_fertile_window: true };
     const cycles = cyclesRes.rows;
     const logs = logsRes.rows;
 
