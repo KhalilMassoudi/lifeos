@@ -242,11 +242,38 @@ async function addWorkoutDetails() {
   await pool.query('CREATE INDEX IF NOT EXISTS workout_sessions_user_date_idx ON workout_sessions (user_id, date DESC)');
 }
 
+// Password vault: only ciphertext and key-derivation parameters are stored
+async function addVault() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS vault_keys (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      salt TEXT NOT NULL,
+      iterations INT NOT NULL,
+      wrapped_key TEXT NOT NULL,
+      wrap_iv TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS vault_items (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      ciphertext TEXT NOT NULL,
+      iv TEXT NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await pool.query('CREATE INDEX IF NOT EXISTS vault_items_user_id_idx ON vault_items (user_id)');
+}
+
 export async function migrate() {
   await createBaseSchema();
   await addFeatureTables();
   await addProfiles();
   await addNotesSharing();
   await addWorkoutDetails();
+  await addVault();
   console.log('Database migrations completed successfully.');
 }

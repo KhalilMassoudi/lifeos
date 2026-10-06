@@ -15,6 +15,7 @@ import periodRoutes from './routes/period.js';
 import mealsRoutes from './routes/meals.js';
 import notesRoutes from './routes/notes.js';
 import workoutsRoutes from './routes/workouts.js';
+import vaultRoutes from './routes/vault.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use('/api/period', periodRoutes);
 app.use('/api/meals', mealsRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/workouts', workoutsRoutes);
+app.use('/api/vault', vaultRoutes);
 
 // Basic health check endpoint
 app.get('/api/health', async (req, res) => {

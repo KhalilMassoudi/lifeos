@@ -16,6 +16,7 @@ const PLUGIN_COMPONENTS = {
   'meals':  lazy(() => import('../../plugins/meals')),
   'journal': lazy(() => import('../../plugins/journal')),
   'workout': lazy(() => import('../../plugins/workout')),
+  'vault': lazy(() => import('../../plugins/vault')),
 };
 
 const LoadingSpinner = () => (

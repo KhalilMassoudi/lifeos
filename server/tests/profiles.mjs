@@ -147,6 +147,20 @@ check('invalid workout rejected',
 await call(A, 'DELETE', `/workouts/templates/${templates[0].id}`);
 check('deleting a template keeps its workouts', (await call(A, 'GET', '/workouts/sessions')).data.length === 1);
 
+// ── Password vault (server only ever sees ciphertext) ───────────────────────
+const vaultKey = { salt: 'c2FsdHNhbHRzYWx0c2FsdA==', iterations: 600000, wrapped_key: 'd3JhcHBlZGtleXdyYXBwZWRrZXl3cmFwcGVka2V5d3JhcHBlZGtleQ==', wrap_iv: 'aXZpdml2aXZpdml2' };
+check('vault starts empty', (await call(A, 'GET', '/vault/key')).data === null);
+check('vault set up', (await call(A, 'POST', '/vault/key', vaultKey)).status === 200);
+check('vault setup only once', (await call(A, 'POST', '/vault/key', vaultKey)).status === 409);
+check('weak key-derivation params rejected', (await call(H2, 'POST', '/vault/key', { ...vaultKey, iterations: 1000 })).status === 400);
+check('non-base64 entry rejected', (await call(A, 'POST', '/vault/items', { ciphertext: 'not base64!', iv: 'aXZpdml2aXZpdml2' })).status === 400);
+const item = (await call(A, 'POST', '/vault/items', { ciphertext: 'Y2lwaGVydGV4dA==', iv: 'aXZpdml2aXZpdml2' })).data;
+check('vault entry stored', item.ciphertext === 'Y2lwaGVydGV4dA==');
+check("partner can't see the vault", (await call(H2, 'GET', '/vault/items')).data.length === 0 && (await call(H2, 'GET', '/vault/key')).data === null);
+check("partner can't overwrite a vault entry", (await call(H2, 'PUT', `/vault/items/${item.id}`, { ciphertext: 'eA==', iv: 'aXZpdml2aXZpdml2' })).status === 404);
+check("partner can't delete a vault entry", (await call(H2, 'DELETE', `/vault/items/${item.id}`)).status === 404);
+check('vault key re-wrapped', (await call(A, 'PUT', '/vault/key', { ...vaultKey, salt: 'bmV3c2FsdG5ld3NhbHQ=' })).data.salt === 'bmV3c2FsdG5ld3NhbHQ=');
+
 const passed = results.filter(Boolean).length;
 console.log(`\n${passed}/${results.length} passed`);
 process.exitCode = passed === results.length ? 0 : 1;
