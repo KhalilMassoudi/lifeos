@@ -28,7 +28,7 @@ const CLASS_TYPES = [
   ['open_mat', /open[\s-]?mat|sparring\s+libre|\brandori\b|\bsparring\b/i],
   ['kids', /\bkids?\b|enfants?|juniors?|\bteens?\b|ados?\b|أطفال/i],
   ['women', /\bwomen|ladies|femmes?|girls?\b|نساء|سيدات/i],
-  ['fundamentals', /fundamental|fondamentaux|d[ée]butants?|beginners?|basics?|\bbase\b|all\s+levels?|tous\s+niveaux|مبتدئين/i],
+  ['fundamentals', /fundamental|fondamentaux|d[ée]butants?|beginners?|basics?|\bbase\b|مبتدئين/i],
   ['advanced', /advanced|avanc[ée]s?|confirm[ée]s?|experts?|متقدم/i],
   ['competition', /comp(?:etition|étition|\b)|compet\b/i],
   ['drilling', /\bdrill/i],

@@ -11,7 +11,7 @@ export default function Modal({ title, subtitle, icon, onClose, children, footer
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' };
+  const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
 
   return createPortal(
     <div

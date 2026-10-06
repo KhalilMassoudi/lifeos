@@ -33,15 +33,19 @@ function NumberCell({ label, value, onChange, step = 1, width = 'w-16' }) {
   );
 }
 
-export default function WorkoutModal({ session, onClose }) {
-  const { saveSession, templates, getExerciseNames } = useWorkoutStore();
-  const [type, setType] = useState(session?.type || 'strength');
-  const [title, setTitle] = useState(session?.title || '');
+// `initial` pre-fills a new workout (e.g. starting a program day)
+export default function WorkoutModal({ session, initial, onClose }) {
+  const { saveSession, templates, getExerciseNames, sports } = useWorkoutStore();
+  const start = session || initial || null;
+  const [type, setType] = useState(start?.type || 'strength');
+  const [title, setTitle] = useState(start?.title || '');
+  const [sportId, setSportId] = useState(start?.sport_id || null);
+  const programDayId = session?.program_day_id || initial?.program_day_id || null;
   const [date, setDate] = useState(session?.date || format(new Date(), 'yyyy-MM-dd'));
   const [duration, setDuration] = useState(session?.duration_minutes ?? '');
   const [feeling, setFeeling] = useState(session?.feeling ?? null);
   const [notes, setNotes] = useState(session?.notes || '');
-  const [exercises, setExercises] = useState(session?.exercises.length ? session.exercises.map(toRow) : [blankExercise()]);
+  const [exercises, setExercises] = useState(start?.exercises?.length ? start.exercises.map(toRow) : [blankExercise()]);
   const [templateName, setTemplateName] = useState('');
   const [saveTemplate, setSaveTemplate] = useState(false);
   const [error, setError] = useState(null);
@@ -65,6 +69,8 @@ export default function WorkoutModal({ session, onClose }) {
     try {
       await saveSession({
         title, type, date,
+        sport_id: sportId,
+        program_day_id: programDayId,
         duration_minutes: duration === '' ? null : Number(duration),
         feeling,
         notes,
@@ -94,7 +100,13 @@ export default function WorkoutModal({ session, onClose }) {
       </>}
     >
       <div className="space-y-5">
-        {!session && templates.length > 0 && (
+        {initial?.program_label && (
+          <p className="text-sm font-bold text-ink-soft p-3 rounded-2xl bg-accent-50/70">
+            📋 From your program: <span className="text-ink">{initial.program_label}</span>
+          </p>
+        )}
+
+        {!session && !initial && templates.length > 0 && (
           <div>
             <p className="text-xs font-bold text-ink-soft mb-2">Start from a template</p>
             <div className="flex flex-wrap gap-2">
@@ -107,6 +119,28 @@ export default function WorkoutModal({ session, onClose }) {
                   style={{ background: WORKOUT_TYPES[t.type]?.tint, color: WORKOUT_TYPES[t.type]?.ink }}
                 >
                   <Bookmark className="w-3.5 h-3.5" /> {t.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sport */}
+        {sports.length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-ink-soft mb-2">Sport</p>
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Sport">
+              {[{ id: null, name: 'None', emoji: '·' }, ...sports].map(sp => (
+                <button
+                  key={sp.id || 'none'}
+                  type="button"
+                  role="radio"
+                  aria-checked={sportId === sp.id}
+                  onClick={() => setSportId(sp.id)}
+                  className={`px-3 py-1.5 rounded-2xl text-xs font-extrabold transition-all
+                    ${sportId === sp.id ? 'bg-accent-100 text-accent-600' : 'bg-surface-sunken text-ink-muted hover:text-ink'}`}
+                >
+                  {sp.emoji} {sp.name}
                 </button>
               ))}
             </div>

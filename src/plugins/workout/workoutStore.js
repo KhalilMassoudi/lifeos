@@ -28,16 +28,56 @@ export const sessionVolume = (session) =>
 export const useWorkoutStore = create((set, get) => ({
   sessions: [],
   templates: [],
+  sports: [],
+  programs: [],
   isLoaded: false,
 
   fetchData: async () => {
     try {
-      const [sessions, templates] = await Promise.all([api.get('/workouts/sessions'), api.get('/workouts/templates')]);
-      set({ sessions, templates, isLoaded: true });
+      const [sessions, templates, sports, programs] = await Promise.all([
+        api.get('/workouts/sessions'), api.get('/workouts/templates'),
+        api.get('/training/sports'), api.get('/training/programs'),
+      ]);
+      set({ sessions, templates, sports, programs, isLoaded: true });
     } catch {
       set({ isLoaded: true });
     }
   },
+
+  // Programs know when each day was last done, so refresh them after logging
+  refreshPrograms: async () => {
+    try { set({ programs: await api.get('/training/programs') }); } catch { /* toast shown */ }
+  },
+
+  refreshSessions: async () => {
+    try { set({ sessions: await api.get('/workouts/sessions') }); } catch { /* toast shown */ }
+  },
+
+  addSport: async (name, emoji) => {
+    const sport = await api.post('/training/sports', { name, emoji });
+    set(state => ({ sports: [...state.sports, sport] }));
+    return sport;
+  },
+
+  deleteSport: async (id) => {
+    const { sports } = get();
+    set({ sports: sports.filter(s => s.id !== id) });
+    try { await api.delete(`/training/sports/${id}`); } catch { set({ sports }); }
+  },
+
+  saveProgram: async (program, id) => {
+    const saved = id ? await api.put(`/training/programs/${id}`, program) : await api.post('/training/programs', program);
+    set(state => ({ programs: [saved, ...state.programs.filter(p => p.id !== saved.id)] }));
+    return saved;
+  },
+
+  deleteProgram: async (id) => {
+    const { programs } = get();
+    set({ programs: programs.filter(p => p.id !== id) });
+    try { await api.delete(`/training/programs/${id}`); } catch { set({ programs }); }
+  },
+
+  hasBjj: () => get().sports.some(s => s.kind === 'bjj'),
 
   saveSession: async (payload, id) => {
     const saved = id ? await api.put(`/workouts/sessions/${id}`, payload) : await api.post('/workouts/sessions', payload);
@@ -46,13 +86,14 @@ export const useWorkoutStore = create((set, get) => ({
         .sort((a, b) => b.date.localeCompare(a.date) || new Date(b.created_at) - new Date(a.created_at)),
     }));
     if (payload.save_as_template) set({ templates: await api.get('/workouts/templates') });
+    if (payload.program_day_id) get().refreshPrograms();
     return saved;
   },
 
   deleteSession: async (id) => {
     const { sessions } = get();
     set({ sessions: sessions.filter(s => s.id !== id) });
-    try { await api.delete(`/workouts/sessions/${id}`); } catch { set({ sessions }); }
+    try { await api.delete(`/workouts/sessions/${id}`); get().refreshPrograms(); } catch { set({ sessions }); }
   },
 
   deleteTemplate: async (id) => {

@@ -19,7 +19,7 @@ Jeudi 19h No Gi
 Vendredi 18h30 Open Mat
 Samedi 10h Kids 👶
 #bjj #jiujitsu #tunis`);
-  check('FR: Monday Gi with range', has(r.classes, { weekday: 1, start_time: '19:00', end_time: '20:30', class_type: 'fundamentals' }), show(r.classes));
+  check('FR: Monday Gi with range (all levels = regular Gi)', has(r.classes, { weekday: 1, start_time: '19:00', end_time: '20:30', class_type: 'gi' }), show(r.classes));
   check('FR: two classes on one line', has(r.classes, { weekday: 2, start_time: '12:15', class_type: 'nogi' }) && has(r.classes, { weekday: 2, start_time: '19:00', class_type: 'fundamentals' }), show(r.classes.filter(c => c.weekday === 2)));
   check('FR: advanced class', has(r.classes, { weekday: 3, start_time: '19:00', end_time: '20:30', class_type: 'advanced' }));
   check('FR: open mat + kids', has(r.classes, { weekday: 5, start_time: '18:30', class_type: 'open_mat' }) && has(r.classes, { weekday: 6, start_time: '10:00', class_type: 'kids' }));
