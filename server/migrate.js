@@ -268,6 +268,116 @@ async function addVault() {
   await pool.query('CREATE INDEX IF NOT EXISTS vault_items_user_id_idx ON vault_items (user_id)');
 }
 
+// Sports, multi-day training programs, the BJJ space, and the Instagram connection
+async function addTrainingAndBjj() {
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS sports (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      emoji VARCHAR(20),
+      kind VARCHAR(20) NOT NULL DEFAULT 'general', -- general | bjj (unlocks the BJJ space)
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (user_id, name)
+    )`,
+    `CREATE TABLE IF NOT EXISTS training_programs (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      sport_id UUID REFERENCES sports(id) ON DELETE SET NULL,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      source VARCHAR(20) NOT NULL DEFAULT 'manual', -- manual | instagram | text
+      source_url TEXT,
+      is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS program_days (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      program_id UUID NOT NULL REFERENCES training_programs(id) ON DELETE CASCADE,
+      position INT NOT NULL DEFAULT 0,
+      label VARCHAR(255) NOT NULL,
+      weekday INT CHECK (weekday BETWEEN 0 AND 6),
+      type VARCHAR(50) NOT NULL DEFAULT 'strength',
+      notes TEXT,
+      exercises JSONB NOT NULL DEFAULT '[]'
+    )`,
+    `ALTER TABLE workout_sessions
+      ADD COLUMN IF NOT EXISTS sport_id UUID REFERENCES sports(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS program_day_id UUID REFERENCES program_days(id) ON DELETE SET NULL`,
+    `CREATE TABLE IF NOT EXISTS bjj_profile (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      belt VARCHAR(20) NOT NULL DEFAULT 'white',
+      stripes INT NOT NULL DEFAULT 0 CHECK (stripes BETWEEN 0 AND 4),
+      promoted_on DATE,
+      gym_name VARCHAR(255),
+      gym_instagram VARCHAR(100),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS bjj_techniques (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      position VARCHAR(50) NOT NULL DEFAULT 'other',
+      category VARCHAR(50) NOT NULL DEFAULT 'other',
+      status VARCHAR(20) NOT NULL DEFAULT 'to_learn', -- to_learn | learning | drilling | live
+      notes TEXT,
+      video_url TEXT,
+      source VARCHAR(20) NOT NULL DEFAULT 'manual', -- manual | gym
+      source_label VARCHAR(255),
+      last_reviewed DATE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS bjj_techniques_user_name_key ON bjj_techniques (user_id, lower(name))`,
+    `CREATE TABLE IF NOT EXISTS bjj_sessions (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      workout_session_id UUID REFERENCES workout_sessions(id) ON DELETE SET NULL,
+      date DATE NOT NULL,
+      class_type VARCHAR(20) NOT NULL DEFAULT 'gi',
+      duration_minutes INT,
+      rounds INT,
+      subs_hit INT,
+      subs_caught INT,
+      energy INT CHECK (energy BETWEEN 1 AND 5),
+      notes TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS bjj_session_techniques (
+      session_id UUID NOT NULL REFERENCES bjj_sessions(id) ON DELETE CASCADE,
+      technique_id UUID NOT NULL REFERENCES bjj_techniques(id) ON DELETE CASCADE,
+      PRIMARY KEY (session_id, technique_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS gym_classes (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      weekday INT NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+      start_time TIME NOT NULL,
+      end_time TIME,
+      title VARCHAR(255) NOT NULL,
+      class_type VARCHAR(20) NOT NULL DEFAULT 'gi',
+      source VARCHAR(20) NOT NULL DEFAULT 'manual',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS integrations (
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      provider VARCHAR(50) NOT NULL,
+      access_token TEXT NOT NULL,
+      external_user_id VARCHAR(100),
+      external_username VARCHAR(100),
+      token_expires_at TIMESTAMP WITH TIME ZONE,
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, provider)
+    )`,
+    'CREATE INDEX IF NOT EXISTS bjj_sessions_user_date_idx ON bjj_sessions (user_id, date DESC)',
+    'CREATE INDEX IF NOT EXISTS gym_classes_user_idx ON gym_classes (user_id, weekday, start_time)',
+    'CREATE INDEX IF NOT EXISTS training_programs_user_idx ON training_programs (user_id)',
+  ];
+  for (const sql of statements) await pool.query(sql);
+}
+
 export async function migrate() {
   await createBaseSchema();
   await addFeatureTables();
@@ -275,5 +385,6 @@ export async function migrate() {
   await addNotesSharing();
   await addWorkoutDetails();
   await addVault();
+  await addTrainingAndBjj();
   console.log('Database migrations completed successfully.');
 }

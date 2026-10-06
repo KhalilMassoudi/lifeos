@@ -5,12 +5,32 @@ import { requireAuth } from '../middleware/auth.js';
 const router = express.Router();
 router.use(requireAuth);
 
-const WORKOUT_TYPES = ['strength', 'cardio', 'flexibility', 'sport', 'other'];
+export const WORKOUT_TYPES = ['strength', 'cardio', 'flexibility', 'sport', 'other'];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// The sport and program day a session points at must belong to the same profile
+export async function ownsSessionRefs(client, userId, { sport_id, program_day_id }) {
+  if (sport_id) {
+    const r = await client.query('SELECT 1 FROM sports WHERE id = $1 AND user_id = $2', [sport_id, userId]);
+    if (r.rows.length === 0) return false;
+  }
+  if (program_day_id) {
+    const r = await client.query(`
+      SELECT 1 FROM program_days d JOIN training_programs p ON p.id = d.program_id
+      WHERE d.id = $1 AND p.user_id = $2
+    `, [program_day_id, userId]);
+    if (r.rows.length === 0) return false;
+  }
+  return true;
+}
 const MAX_EXERCISES = 30;
 
 const SESSION_SELECT = `
   SELECT
     s.id, s.title, s.type, s.date, s.duration_minutes, s.feeling, s.notes, s.template_id, s.created_at,
+    s.sport_id, s.program_day_id,
+    (SELECT json_build_object('id', sp.id, 'name', sp.name, 'emoji', sp.emoji, 'kind', sp.kind)
+     FROM sports sp WHERE sp.id = s.sport_id) AS sport,
     COALESCE(
       (SELECT json_agg(json_build_object(
           'id', e.id, 'name', e.name, 'sets', e.sets, 'reps', e.reps, 'weight', e.weight,
@@ -45,7 +65,7 @@ const optionalNumber = (value, { integer = false, max = 100000 } = {}) => {
 };
 
 // Validates and normalizes an exercise list. Returns { error } or { exercises }.
-function parseExercises(list) {
+export function parseExercises(list) {
   if (list === undefined) return { exercises: [] };
   if (!Array.isArray(list) || list.length > MAX_EXERCISES) return { error: `Up to ${MAX_EXERCISES} exercises.` };
   const exercises = [];
@@ -79,13 +99,19 @@ function parseSession(body) {
   if (!feel.ok || feel.value === 0) return { error: 'Invalid feeling.' };
   const { exercises, error } = parseExercises(body.exercises);
   if (error) return { error };
+  const sportId = body.sport_id || null;
+  const programDayId = body.program_day_id || null;
+  if ((sportId && !UUID.test(sportId)) || (programDayId && !UUID.test(programDayId))) return { error: 'Invalid reference.' };
   return {
-    session: { title: title?.trim() || null, type, date, duration_minutes: duration.value, feeling: feel.value, notes: notes?.trim() || null },
+    session: {
+      title: title?.trim() || null, type, date, duration_minutes: duration.value, feeling: feel.value, notes: notes?.trim() || null,
+      sport_id: sportId, program_day_id: programDayId,
+    },
     exercises,
   };
 }
 
-async function inTransaction(work) {
+export async function inTransaction(work) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -145,15 +171,17 @@ router.post('/sessions', async (req, res) => {
     if (templateName.length > 255) return res.status(400).json({ error: 'Template name is too long.' });
     if (templateName && exercises.length === 0) return res.status(400).json({ error: 'Add exercises to save a template.' });
 
+    if (!(await ownsSessionRefs({ query }, req.userId, session))) return res.status(404).json({ error: 'Sport or program not found' });
+
     const id = await inTransaction(async (client) => {
       const templateId = templateName
         ? await createTemplate(client, req.userId, templateName, session.type, exercises)
         : null;
       const created = await client.query(`
-        INSERT INTO workout_sessions (user_id, template_id, title, type, date, duration_minutes, feeling, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO workout_sessions (user_id, template_id, title, type, date, duration_minutes, feeling, notes, sport_id, program_day_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id
-      `, [req.userId, templateId, session.title, session.type, session.date, session.duration_minutes, session.feeling, session.notes]);
+      `, [req.userId, templateId, session.title, session.type, session.date, session.duration_minutes, session.feeling, session.notes, session.sport_id, session.program_day_id]);
       await insertExercises(client, req.userId, created.rows[0].id, exercises);
       return created.rows[0].id;
     });
@@ -171,13 +199,16 @@ router.put('/sessions/:id', async (req, res) => {
     const { session, exercises, error } = parseSession(req.body);
     if (error) return res.status(400).json({ error });
 
+    if (!(await ownsSessionRefs({ query }, req.userId, session))) return res.status(404).json({ error: 'Sport or program not found' });
+
     const updated = await inTransaction(async (client) => {
       const result = await client.query(`
         UPDATE workout_sessions
-        SET title = $1, type = $2, date = $3, duration_minutes = $4, feeling = $5, notes = $6, updated_at = NOW()
+        SET title = $1, type = $2, date = $3, duration_minutes = $4, feeling = $5, notes = $6,
+            sport_id = $9, program_day_id = $10, updated_at = NOW()
         WHERE id = $7 AND user_id = $8
         RETURNING id
-      `, [session.title, session.type, session.date, session.duration_minutes, session.feeling, session.notes, req.params.id, req.userId]);
+      `, [session.title, session.type, session.date, session.duration_minutes, session.feeling, session.notes, req.params.id, req.userId, session.sport_id, session.program_day_id]);
       if (result.rows.length === 0) return false;
       await client.query('DELETE FROM workout_exercises WHERE session_id = $1', [req.params.id]);
       await insertExercises(client, req.userId, req.params.id, exercises);

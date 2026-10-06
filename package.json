@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:vault": "node src/plugins/vault/vaultCrypto.test.mjs"
+    "test:vault": "node src/plugins/vault/vaultCrypto.test.mjs",
+    "test:parser": "node src/plugins/workout/bjj/parseGymPost.test.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^16.6.0",

@@ -16,6 +16,9 @@ import mealsRoutes from './routes/meals.js';
 import notesRoutes from './routes/notes.js';
 import workoutsRoutes from './routes/workouts.js';
 import vaultRoutes from './routes/vault.js';
+import trainingRoutes from './routes/training.js';
+import bjjRoutes from './routes/bjj.js';
+import instagramRoutes from './routes/instagram.js';
 
 dotenv.config();
 
@@ -40,6 +43,9 @@ app.use('/api/meals', mealsRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/workouts', workoutsRoutes);
 app.use('/api/vault', vaultRoutes);
+app.use('/api/training', trainingRoutes);
+app.use('/api/bjj', bjjRoutes);
+app.use('/api/instagram', instagramRoutes);
 
 // Basic health check endpoint
 app.get('/api/health', async (req, res) => {
